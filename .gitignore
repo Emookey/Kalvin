@@ -1,0 +1,76 @@
+# Environment and host-local configuration
+.env
+.env.*
+!.env.example
+*.local.env
+*.local.yml
+*.local.yaml
+compose.override.yml
+docker-compose.override.yml
+config.local.*
+inventory.local.*
+
+# Secret and credential material
+secrets/
+credentials/
+*.key
+*.pem
+*.p12
+*.pfx
+*.token
+*.tokens
+
+# Runtime/application state (root-level deployment outputs only)
+/data/
+/runtime/
+/attachments/
+/uploads/
+/volumes/
+/backups/
+/logs/
+
+# Databases and common dump artifacts
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.dump.gz
+*.sql.gz
+*.backup
+*-dump.sql
+*.database.sql
+
+# Logs, caches, and test artifacts
+*.log
+*.cache
+.cache/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+node_modules/
+
+# Virtual environments and temporary files
+.venv/
+venv/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backup/archive payloads
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+
+# Editor and operating-system artifacts
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -75,8 +75,8 @@ Canonical Kal currently keeps RAG indexing status in process-local memory. Durab
 - [Deployment profiles](docs/deployment/profiles.md)
 - [Portability and readiness](docs/deployment/portability-and-readiness.md)
 - [Backup and restore model](docs/operations/backup-restore-model.md)
-
-Migration and development-governance documents are added by the final bootstrap commit in this candidate.
+- [GoodWill migration and legacy compatibility](docs/migration/goodwill-and-compatibility.md)
+- [Repository map and roadmap](docs/development/repository-map-and-roadmap.md)
 
 ## Future implementation locations
 
