@@ -1,0 +1,43 @@
+{
+  "$schema": "../../schemas/deployment-profile.schema.json",
+  "schema_version": "1.0.0",
+  "contract_status": "reference-architecture",
+  "operational": false,
+  "id": "lab",
+  "role": "EXPERIMENTATION_AND_COMPATIBILITY",
+  "production_mode": false,
+  "purpose": "Experimentation, compatibility testing, and development validation with explicitly selected components.",
+  "components": [
+    {"id": "kal", "requirement": "OPTIONAL", "default_enabled": false},
+    {"id": "beepy", "requirement": "OPTIONAL", "default_enabled": false},
+    {"id": "model-runtime", "requirement": "OPTIONAL", "default_enabled": false},
+    {"id": "monitoring", "requirement": "REQUIRED", "default_enabled": true},
+    {"id": "backup-client", "requirement": "OPTIONAL", "default_enabled": false},
+    {"id": "storage-backup-target", "requirement": "FORBIDDEN", "default_enabled": false},
+    {"id": "network-overlay", "requirement": "OPTIONAL", "default_enabled": false},
+    {"id": "legacy-open-webui-compatibility", "requirement": "OPTIONAL", "default_enabled": false},
+    {"id": "public-test-exposure", "requirement": "OPTIONAL", "default_enabled": false}
+  ],
+  "required_readiness_gates": [
+    "platform.contracts-valid",
+    "repositories.resolved",
+    "configuration.complete",
+    "secrets.resolved",
+    "selected-components.ready",
+    "identity.separation-validated",
+    "exposure.policy-valid",
+    "monitoring.health"
+  ],
+  "default_exposure_ceiling": "OVERLAY",
+  "exposure_exceptions": [
+    {"component": "public-test-exposure", "maximum": "PUBLIC", "default_enabled": false, "requires_gates": ["selected-components.ready", "application.authorization-validated", "exposure.policy-valid", "public-test-exposure.health"]}
+  ],
+  "backup_posture": "NO_PRODUCTION_GUARANTEE",
+  "repository_policy": "DEVELOPMENT_REFS_ALLOWED_BUT_IMMUTABLE_RESOLUTION_REQUIRED",
+  "compatibility_policy": {"enabled_by_default": false, "implicit_fallback": false, "allowed_statuses": ["OPTIONAL", "EXPERIMENTAL", "LEGACY"]},
+  "profile_invariants": [
+    "Lab state does not become production truth by observation.",
+    "Public exposure requires the explicit default-off exception and its additional gates.",
+    "A lab result proves only the recorded test conditions."
+  ]
+}

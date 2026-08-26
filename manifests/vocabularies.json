@@ -1,0 +1,69 @@
+{
+  "$schema": "../schemas/vocabularies.schema.json",
+  "schema_version": "1.0.0",
+  "contract_status": "reference-architecture",
+  "operational": false,
+  "state_classes": [
+    {
+      "id": "AUTHORITATIVE",
+      "backup_expectation": "REQUIRED",
+      "restore_expectation": "restore before migrations and derived reconciliation",
+      "rebuild_behavior": "not rebuildable from derived state",
+      "acceptable_data_loss": "only the explicitly approved recovery point",
+      "ownership": "owning application or Storage recovery service",
+      "examples": ["Kal SQLite and raw documents", "Beepy business state", "protected backup payloads"]
+    },
+    {
+      "id": "DERIVED",
+      "backup_expectation": "REBUILDABLE",
+      "restore_expectation": "rebuild or reconcile from authority",
+      "rebuild_behavior": "must have a pinned source and validated recipe",
+      "acceptable_data_loss": "entire copy when source and recipe remain available",
+      "ownership": "deriving component",
+      "examples": ["Kal vector indexes", "reproducible model downloads"]
+    },
+    {
+      "id": "EPHEMERAL",
+      "backup_expectation": "EXCLUDED",
+      "restore_expectation": "recreate at service start",
+      "rebuild_behavior": "automatic process-lifetime recreation",
+      "acceptable_data_loss": "entire copy",
+      "ownership": "runtime service",
+      "examples": ["PID files", "sockets", "locks", "temporary work"]
+    },
+    {
+      "id": "CONFIGURATION",
+      "backup_expectation": "EXCLUDED",
+      "restore_expectation": "render from reviewed declarations and approved host inventory",
+      "rebuild_behavior": "deterministic render with validation",
+      "acceptable_data_loss": "host-local copy when source inputs survive",
+      "ownership": "platform and consuming service",
+      "examples": ["rendered non-secret settings", "retention policy"]
+    },
+    {
+      "id": "SECRET",
+      "backup_expectation": "EXCLUDED",
+      "restore_expectation": "inject from a separate protected recovery provider",
+      "rebuild_behavior": "rotate or recover outside ordinary deployment records",
+      "acceptable_data_loss": "defined by credential recovery policy",
+      "ownership": "credential owner and consuming service",
+      "examples": ["service credentials", "private keys", "recovery material"]
+    },
+    {
+      "id": "LOG",
+      "backup_expectation": "EXCLUDED",
+      "restore_expectation": "never restore as application truth",
+      "rebuild_behavior": "new events produce new logs",
+      "acceptable_data_loss": "defined by separate audit and operations policy",
+      "ownership": "emitting service and log operator",
+      "examples": ["service logs", "deployment logs"]
+    }
+  ],
+  "backup_classes": ["REQUIRED", "REBUILDABLE", "EXCLUDED"],
+  "exposure_classes": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY", "PUBLIC"],
+  "privilege_classes": ["UNPRIVILEGED_APPLICATION", "LIMITED_PLATFORM_SERVICE", "HOST_ADMINISTRATIVE", "EXTERNAL_HOST_MANAGEMENT"],
+  "dependency_kinds": ["STARTUP", "HEALTH", "READINESS", "OPTIONAL_INTEGRATION"],
+  "profile_requirements": ["REQUIRED", "OPTIONAL", "FORBIDDEN"],
+  "readiness_classes": ["SELF_HEALTH", "APPLICATION_READINESS", "PLATFORM_READINESS", "STORAGE_READINESS", "OPTIONAL_INTEGRATION_READINESS"],
+  "compatibility_statuses": ["CANONICAL", "OPTIONAL", "EXPERIMENTAL", "LEGACY"]
+}

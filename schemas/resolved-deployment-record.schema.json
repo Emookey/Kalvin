@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "resolved-deployment-record.schema.json",
+  "title": "Kalvin secret-free resolved deployment record contract",
+  "description": "Schema only; records are host state and Phase 4C provides no recorder.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "deployment_id", "profile_id", "host_role", "kalvin_commit", "repository_resolutions", "component_resolutions", "configuration_revision", "application_schema_states", "deployment_timestamp", "readiness_results", "overall_readiness"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "deployment_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+    "profile_id": {"enum": ["lab", "core", "storage"]},
+    "host_role": {"type": "string"},
+    "kalvin_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "repository_resolutions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "desired_ref", "resolved_commit", "source_identity"],
+        "properties": {
+          "id": {"type": "string"},
+          "desired_ref": {"type": "string"},
+          "resolved_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "source_identity": {"type": "string", "description": "Logical mirror/origin ID, not a credential-bearing URL."}
+        }
+      }
+    },
+    "component_resolutions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "implementation", "immutable_version"],
+        "properties": {
+          "id": {"type": "string"},
+          "implementation": {"type": "string"},
+          "immutable_version": {"type": "string"}
+        }
+      }
+    },
+    "configuration_revision": {"type": "string"},
+    "application_schema_states": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["owner", "identifier", "result"],
+        "properties": {
+          "owner": {"enum": ["KAL", "BEEPY"]},
+          "identifier": {"type": "string"},
+          "result": {"enum": ["PASS", "FAIL", "NOT_APPLICABLE"]}
+        }
+      }
+    },
+    "deployment_timestamp": {"type": "string", "format": "date-time"},
+    "readiness_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["gate", "result", "evidence_ref"],
+        "properties": {
+          "gate": {"type": "string"},
+          "result": {"enum": ["PASS", "FAIL", "DEGRADED", "NOT_APPLICABLE"]},
+          "evidence_ref": {"type": ["string", "null"], "description": "Secret-free logical evidence reference."}
+        }
+      }
+    },
+    "overall_readiness": {"enum": ["READY", "NOT_READY", "DEGRADED"]}
+  }
+}

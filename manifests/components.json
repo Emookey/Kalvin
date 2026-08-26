@@ -1,0 +1,210 @@
+{
+  "$schema": "../schemas/component-catalog.schema.json",
+  "schema_version": "1.0.0",
+  "contract_status": "reference-architecture",
+  "operational": false,
+  "components": [
+    {
+      "id": "kal",
+      "owner": "KAL",
+      "purpose": "Deploy the independent general-purpose assistant application without absorbing its implementation.",
+      "allowed_profiles": ["lab", "core"],
+      "default_requirement_by_profile": {"lab": "OPTIONAL", "core": "REQUIRED", "storage": "FORBIDDEN"},
+      "version": {"source": "REPOSITORY_LOCK", "repository_id": "kal", "immutable_resolution": true},
+      "dependencies": [
+        {"component": "model-runtime", "kind": "OPTIONAL_INTEGRATION", "required": false, "partial_operation": "Kal follows its application-owned remote or local model-runtime contract."}
+      ],
+      "exposure": {"default": "PLATFORM_INTERNAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY"]},
+      "privilege_class": "UNPRIVILEGED_APPLICATION",
+      "state_requirements": [
+        {"id": "kal-authoritative", "class": "AUTHORITATIVE", "path": "/var/lib/kalvin/kal", "backup": "REQUIRED", "owner": "KAL"},
+        {"id": "kal-vector-index", "class": "DERIVED", "path": "/var/cache/kalvin/kal/vector", "backup": "REBUILDABLE", "owner": "KAL"},
+        {"id": "kal-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/kal", "backup": "EXCLUDED", "owner": "KAL"},
+        {"id": "kal-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/kal", "backup": "EXCLUDED", "owner": "KAL"},
+        {"id": "kal-runtime", "class": "EPHEMERAL", "path": "/run/kalvin/kal", "backup": "EXCLUDED", "owner": "KAL"},
+        {"id": "kal-logs", "class": "LOG", "path": "/var/log/kalvin/kal", "backup": "EXCLUDED", "owner": "KAL"}
+      ],
+      "health_readiness_class": "APPLICATION_READINESS",
+      "health_gate": "kal.health",
+      "readiness_gates": ["authoritative-state.ready", "application.migrations-complete", "application.authorization-validated", "derived-state.reconciled"],
+      "compatibility": {"status": "CANONICAL", "retirement_gate": null}
+    },
+    {
+      "id": "beepy",
+      "owner": "BEEPY",
+      "purpose": "Deploy the independent business/work intelligence application without absorbing business logic or state ownership.",
+      "allowed_profiles": ["lab", "core"],
+      "default_requirement_by_profile": {"lab": "OPTIONAL", "core": "REQUIRED", "storage": "FORBIDDEN"},
+      "version": {"source": "REPOSITORY_LOCK", "repository_id": "beepy", "immutable_resolution": true},
+      "dependencies": [
+        {"component": "kal", "kind": "OPTIONAL_INTEGRATION", "required": false, "partial_operation": "Beepy local business modes may remain available while the scoped Kal technical integration is degraded."}
+      ],
+      "exposure": {"default": "PLATFORM_INTERNAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY"]},
+      "privilege_class": "UNPRIVILEGED_APPLICATION",
+      "state_requirements": [
+        {"id": "beepy-authoritative", "class": "AUTHORITATIVE", "path": "/var/lib/kalvin/beepy", "backup": "REQUIRED", "owner": "BEEPY"},
+        {"id": "beepy-derived-cache", "class": "DERIVED", "path": "/var/cache/kalvin/beepy", "backup": "REBUILDABLE", "owner": "BEEPY"},
+        {"id": "beepy-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/beepy", "backup": "EXCLUDED", "owner": "BEEPY"},
+        {"id": "beepy-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/beepy", "backup": "EXCLUDED", "owner": "BEEPY"},
+        {"id": "beepy-runtime", "class": "EPHEMERAL", "path": "/run/kalvin/beepy", "backup": "EXCLUDED", "owner": "BEEPY"},
+        {"id": "beepy-logs", "class": "LOG", "path": "/var/log/kalvin/beepy", "backup": "EXCLUDED", "owner": "BEEPY"}
+      ],
+      "health_readiness_class": "APPLICATION_READINESS",
+      "health_gate": "beepy.health",
+      "readiness_gates": ["authoritative-state.ready", "application.migrations-complete", "application.authorization-validated"],
+      "compatibility": {"status": "CANONICAL", "retirement_gate": null}
+    },
+    {
+      "id": "model-runtime",
+      "owner": "KALVIN_INTERFACE",
+      "purpose": "Provide a replaceable local or remote model-execution capability without making one provider synonymous with Kalvin.",
+      "allowed_profiles": ["lab", "core"],
+      "default_requirement_by_profile": {"lab": "OPTIONAL", "core": "REQUIRED", "storage": "FORBIDDEN"},
+      "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
+      "dependencies": [],
+      "exposure": {"default": "PLATFORM_INTERNAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL"]},
+      "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "state_requirements": [
+        {"id": "model-runtime-cache", "class": "DERIVED", "path": "/var/cache/kalvin/model-runtime", "backup": "REBUILDABLE", "owner": "SELECTED_PROVIDER"},
+        {"id": "model-runtime-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/model-runtime", "backup": "EXCLUDED", "owner": "KALVIN"},
+        {"id": "model-runtime-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/model-runtime", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
+        {"id": "model-runtime-runtime", "class": "EPHEMERAL", "path": "/run/kalvin/model-runtime", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
+        {"id": "model-runtime-logs", "class": "LOG", "path": "/var/log/kalvin/model-runtime", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"}
+      ],
+      "health_readiness_class": "PLATFORM_READINESS",
+      "health_gate": "model-runtime.health",
+      "readiness_gates": [],
+      "compatibility": {"status": "CANONICAL", "retirement_gate": null}
+    },
+    {
+      "id": "monitoring",
+      "owner": "KALVIN",
+      "purpose": "Collect bounded health/readiness signals without receiving application or host-management authority.",
+      "allowed_profiles": ["lab", "core", "storage"],
+      "default_requirement_by_profile": {"lab": "REQUIRED", "core": "REQUIRED", "storage": "REQUIRED"},
+      "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
+      "dependencies": [],
+      "exposure": {"default": "HOST_INTERNAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY"]},
+      "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "state_requirements": [
+        {"id": "monitoring-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/monitoring", "backup": "EXCLUDED", "owner": "KALVIN"},
+        {"id": "monitoring-runtime", "class": "EPHEMERAL", "path": "/run/kalvin/monitoring", "backup": "EXCLUDED", "owner": "KALVIN"},
+        {"id": "monitoring-logs", "class": "LOG", "path": "/var/log/kalvin/monitoring", "backup": "EXCLUDED", "owner": "KALVIN"}
+      ],
+      "health_readiness_class": "PLATFORM_READINESS",
+      "health_gate": "monitoring.health",
+      "readiness_gates": [],
+      "compatibility": {"status": "CANONICAL", "retirement_gate": null}
+    },
+    {
+      "id": "backup-client",
+      "owner": "KALVIN",
+      "purpose": "Submit application-consistent backup sets outbound using a bounded identity separate from restore and application administration.",
+      "allowed_profiles": ["lab", "core", "storage"],
+      "default_requirement_by_profile": {"lab": "OPTIONAL", "core": "REQUIRED", "storage": "OPTIONAL"},
+      "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
+      "dependencies": [],
+      "exposure": {"default": "PROCESS_LOCAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL"]},
+      "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "state_requirements": [
+        {"id": "backup-client-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/backup-client", "backup": "EXCLUDED", "owner": "KALVIN"},
+        {"id": "backup-client-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/backup-client", "backup": "EXCLUDED", "owner": "KALVIN"},
+        {"id": "backup-client-runtime", "class": "EPHEMERAL", "path": "/run/kalvin/backup-client", "backup": "EXCLUDED", "owner": "KALVIN"},
+        {"id": "backup-client-logs", "class": "LOG", "path": "/var/log/kalvin/backup-client", "backup": "EXCLUDED", "owner": "KALVIN"}
+      ],
+      "health_readiness_class": "PLATFORM_READINESS",
+      "health_gate": "backup-client.health",
+      "readiness_gates": ["backup.outbound-ready"],
+      "compatibility": {"status": "CANONICAL", "retirement_gate": null}
+    },
+    {
+      "id": "storage-backup-target",
+      "owner": "KALVIN_STORAGE",
+      "purpose": "Receive protected backup sets and own repository integrity, retention, and restore-source availability without application-admin credentials.",
+      "allowed_profiles": ["storage"],
+      "default_requirement_by_profile": {"lab": "FORBIDDEN", "core": "FORBIDDEN", "storage": "REQUIRED"},
+      "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
+      "dependencies": [],
+      "exposure": {"default": "PLATFORM_INTERNAL", "allowed": ["HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY"]},
+      "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "state_requirements": [
+        {"id": "storage-backup-payloads", "class": "AUTHORITATIVE", "path": "/srv/kalvin-backups/sources", "backup": "REQUIRED", "owner": "KALVIN_STORAGE"},
+        {"id": "storage-retention-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/storage-backup-target", "backup": "EXCLUDED", "owner": "KALVIN_STORAGE"},
+        {"id": "storage-backup-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/storage-backup-target", "backup": "EXCLUDED", "owner": "KALVIN_STORAGE"},
+        {"id": "storage-backup-runtime", "class": "EPHEMERAL", "path": "/run/kalvin/storage-backup-target", "backup": "EXCLUDED", "owner": "KALVIN_STORAGE"},
+        {"id": "storage-backup-logs", "class": "LOG", "path": "/var/log/kalvin/storage-backup-target", "backup": "EXCLUDED", "owner": "KALVIN_STORAGE"}
+      ],
+      "health_readiness_class": "STORAGE_READINESS",
+      "health_gate": "storage-backup-target.health",
+      "readiness_gates": ["storage.repository-ready", "storage.retention-ready", "storage.restore-authorization-ready"],
+      "compatibility": {"status": "CANONICAL", "retirement_gate": null}
+    },
+    {
+      "id": "network-overlay",
+      "owner": "SELECTED_PROVIDER",
+      "purpose": "Provide optional private transport without replacing service authentication or profile exposure policy.",
+      "allowed_profiles": ["lab", "core", "storage"],
+      "default_requirement_by_profile": {"lab": "OPTIONAL", "core": "OPTIONAL", "storage": "OPTIONAL"},
+      "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
+      "dependencies": [],
+      "exposure": {"default": "HOST_INTERNAL", "allowed": ["HOST_INTERNAL", "OVERLAY"]},
+      "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "state_requirements": [
+        {"id": "network-overlay-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/network-overlay", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
+        {"id": "network-overlay-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/network-overlay", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
+        {"id": "network-overlay-runtime", "class": "EPHEMERAL", "path": "/run/kalvin/network-overlay", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
+        {"id": "network-overlay-logs", "class": "LOG", "path": "/var/log/kalvin/network-overlay", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"}
+      ],
+      "health_readiness_class": "OPTIONAL_INTEGRATION_READINESS",
+      "health_gate": "network-overlay.health",
+      "readiness_gates": [],
+      "compatibility": {"status": "OPTIONAL", "retirement_gate": null}
+    },
+    {
+      "id": "legacy-open-webui-compatibility",
+      "owner": "SELECTED_PROVIDER",
+      "purpose": "Provide an explicit default-off legacy UI compatibility bridge without becoming Kal application authority.",
+      "allowed_profiles": ["lab", "core"],
+      "default_requirement_by_profile": {"lab": "OPTIONAL", "core": "OPTIONAL", "storage": "FORBIDDEN"},
+      "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
+      "dependencies": [
+        {"component": "model-runtime", "kind": "STARTUP", "required": true, "partial_operation": "The compatibility component remains stopped when its selected runtime is unavailable."}
+      ],
+      "exposure": {"default": "HOST_INTERNAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY"]},
+      "privilege_class": "UNPRIVILEGED_APPLICATION",
+      "state_requirements": [
+        {"id": "legacy-ui-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/open-webui", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
+        {"id": "legacy-ui-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/open-webui", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
+        {"id": "legacy-ui-runtime", "class": "EPHEMERAL", "path": "/run/kalvin/open-webui", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
+        {"id": "legacy-ui-logs", "class": "LOG", "path": "/var/log/kalvin/open-webui", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"}
+      ],
+      "health_readiness_class": "OPTIONAL_INTEGRATION_READINESS",
+      "health_gate": "legacy-open-webui-compatibility.health",
+      "readiness_gates": [],
+      "compatibility": {"status": "LEGACY", "retirement_gate": "All approved consumers use canonical Kal interfaces and regression evidence no longer requires the bridge."}
+    },
+    {
+      "id": "public-test-exposure",
+      "owner": "SELECTED_PROVIDER",
+      "purpose": "Represent a temporary, explicitly approved, authenticated public test boundary for lab only.",
+      "allowed_profiles": ["lab"],
+      "default_requirement_by_profile": {"lab": "OPTIONAL", "core": "FORBIDDEN", "storage": "FORBIDDEN"},
+      "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
+      "dependencies": [
+        {"component": "kal", "kind": "READINESS", "required": true, "partial_operation": "Public testing remains disabled until the selected test application is ready."}
+      ],
+      "exposure": {"default": "PUBLIC", "allowed": ["PUBLIC"]},
+      "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "state_requirements": [
+        {"id": "public-test-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/public-test-exposure", "backup": "EXCLUDED", "owner": "KALVIN"},
+        {"id": "public-test-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/public-test-exposure", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
+        {"id": "public-test-runtime", "class": "EPHEMERAL", "path": "/run/kalvin/public-test-exposure", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
+        {"id": "public-test-logs", "class": "LOG", "path": "/var/log/kalvin/public-test-exposure", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"}
+      ],
+      "health_readiness_class": "OPTIONAL_INTEGRATION_READINESS",
+      "health_gate": "public-test-exposure.health",
+      "readiness_gates": ["exposure.policy-valid"],
+      "compatibility": {"status": "EXPERIMENTAL", "retirement_gate": "The approved temporary test window closes or a reviewed permanent exposure design supersedes it."}
+    }
+  ]
+}

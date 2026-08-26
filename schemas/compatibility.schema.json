@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "compatibility.schema.json",
+  "title": "Kalvin explicit compatibility catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schema_version", "contract_status", "operational", "conflict_policy", "implicit_fallback", "entries"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schema_version": {"type": "string"},
+    "contract_status": {"const": "reference-architecture"},
+    "operational": {"const": false},
+    "conflict_policy": {"const": "FAIL_CLOSED"},
+    "implicit_fallback": {"const": false},
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "legacy_identifier", "canonical_replacement", "consumer", "reason", "owner", "test_contract", "retirement_gate"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+          "legacy_identifier": {"type": "string", "minLength": 1},
+          "canonical_replacement": {"type": "string", "minLength": 1},
+          "consumer": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1},
+          "owner": {"type": "string", "minLength": 1},
+          "test_contract": {"type": "string", "minLength": 1},
+          "retirement_gate": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}
