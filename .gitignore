@@ -5,6 +5,7 @@
 *.local.env
 *.local.yml
 *.local.yaml
+*.local.json
 compose.override.yml
 docker-compose.override.yml
 config.local.*
@@ -19,6 +20,13 @@ credentials/
 *.pfx
 *.token
 *.tokens
+*.jks
+*.keystore
+*.kdbx
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
 
 # Runtime/application state (root-level deployment outputs only)
 /data/

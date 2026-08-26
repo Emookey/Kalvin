@@ -317,6 +317,39 @@ check(
 )
 check("no LICENSE was invented", not any(path.name.upper().startswith("LICENSE") for path in all_paths))
 
+ignored_examples = [
+    ".env",
+    ".env.production",
+    "secrets/service/credential",
+    "credentials/backup/token",
+    "id_rsa",
+    "operator.key",
+    "deployment.local.json",
+    "state.sqlite",
+    "backups/authoritative.tar",
+    "logs/service.log",
+    "tests/__pycache__/validator.pyc",
+]
+visible_examples = [".env.example", "docs/example.json", "manifests/components.json", "tests/fixture.sql"]
+ignore_errors: list[str] = []
+for example in ignored_examples:
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--quiet", example],
+        cwd=ROOT,
+        check=False,
+    )
+    if result.returncode != 0:
+        ignore_errors.append(f"expected ignored: {example}")
+for example in visible_examples:
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--quiet", example],
+        cwd=ROOT,
+        check=False,
+    )
+    if result.returncode == 0:
+        ignore_errors.append(f"expected visible: {example}")
+check(".gitignore protects private/runtime artifacts without hiding safe examples", not ignore_errors, "; ".join(ignore_errors))
+
 operational_patterns = [
     re.compile(pattern, re.IGNORECASE)
     for pattern in (
