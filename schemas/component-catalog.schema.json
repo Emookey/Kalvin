@@ -75,7 +75,7 @@
               "properties": {
                 "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
                 "class": {"enum": ["AUTHORITATIVE", "DERIVED", "EPHEMERAL", "CONFIGURATION", "SECRET", "LOG"]},
-                "path": {"type": "string", "pattern": "^/(opt|etc|var|run|srv)/kalvin(?:/|$)"},
+                "path": {"type": "string", "pattern": "^/(?:opt/kalvin|etc/kalvin|var/(?:lib|cache|log)/kalvin|run/kalvin|srv/kalvin-backups)(?:/|$)"},
                 "backup": {"enum": ["REQUIRED", "REBUILDABLE", "EXCLUDED"]},
                 "owner": {"type": "string", "minLength": 1}
               }
