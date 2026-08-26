@@ -72,6 +72,8 @@ Canonical Kal's durable RAG indexing status and restart/reconciliation validatio
 ## Testing expectations
 
 - Keep tests isolated and non-destructive by default.
+- Treat files under `deploy/`, `manifests/`, and `schemas/` as architecture contracts, not executable deployment instructions.
+- Resolve selected repositories/components to immutable versions before any later host mutation; a branch or tag alone is not a production lock.
 - Do not contact live Kal, Beepy, databases, email, business integrations, Docker, host-management, or network-control systems during ordinary tests.
 - Validate repository-relative links, formatting, public safety, ignore behavior, file modes, symlinks, and Git integrity for repository changes.
 - For future profiles and tools, test required/optional/forbidden combinations, target confinement, failure behavior, idempotence where promised, rollback, and secret-safe output.

@@ -1,6 +1,6 @@
 # Contributing to Kalvin
 
-Kalvin is currently a documentation-only bootstrap candidate. Contributions should preserve repository boundaries and describe future behavior honestly as `TARGET` or `PLANNED` until implementation and validation exist.
+Kalvin currently contains a charter and non-operational declarative architecture contracts. Contributions should preserve repository boundaries and describe future runtime behavior honestly as `TARGET` or `PLANNED` until implementation and validation exist.
 
 ## Branch model
 
@@ -8,8 +8,6 @@ Kalvin is currently a documentation-only bootstrap candidate. Contributions shou
 - `development` is the normal active-work branch.
 
 Begin ordinary work from an up-to-date `development` branch, use a focused topic branch when the review workflow calls for one, and propose reviewed changes back into `development`. Promotion from `development` to `main` should occur through the repository's reviewed process.
-
-The Phase 4B candidate itself uses `phase-4b-bootstrap` for isolated review. That bootstrap branch does not replace the intended long-term model.
 
 Force pushes are not part of the normal workflow. Do not rewrite shared history, bypass review, or change `main` directly to make a sequence look cleaner.
 
@@ -85,6 +83,7 @@ git diff
 
 Also verify:
 
+- reference manifests pass `python3 tests/validate_architecture.py`;
 - documentation links resolve;
 - no unexpected executable or symlink was added;
 - no secret, private endpoint, runtime state, or generated artifact is tracked;

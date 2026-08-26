@@ -16,32 +16,20 @@ These domains are conceptual and security-relevant. They do not map to one share
 
 ## State classes
 
-### Authoritative application state
+| Class | Backup expectation | Restore/rebuild | Acceptable loss | Owner | Examples |
+| --- | --- | --- | --- | --- | --- |
+| `AUTHORITATIVE` | `REQUIRED`; application-consistent and protected off-host | Restore before migration and derived reconciliation | Only within an explicitly accepted recovery point objective | Owning application or Storage recovery service | Kal SQLite/raw documents; Beepy business database/files; protected backup payloads |
+| `DERIVED` | `REBUILDABLE`; optional accelerator only | Recreate/reconcile from authority and verify | Entire copy when source and recipe remain available | Component that derives it | Kal Chroma/vector index; reproducible model/package caches |
+| `EPHEMERAL` | `EXCLUDED` | Recreate at process/service start | Entire process-lifetime copy | Runtime service | sockets, PID files, locks, temporary work |
+| `CONFIGURATION` | Reconstruct from reviewed declarations plus approved host inventory; not a substitute for authoritative backup | Render for the target host and validate | Host-local copy may be replaced when source inputs survive | Platform plus consuming service | rendered non-secret settings, retention policy |
+| `SECRET` | Separate protected recovery policy; never ordinary Git/log backup | Inject from an approved secret provider | Determined by credential recovery/rotation policy | Credential owner and consuming service | tokens, passwords, keys, recovery material |
+| `LOG` | `EXCLUDED` from authoritative sets unless a separate evidence policy requires bounded retention | Do not restore as application truth | Defined by audit/operations policy | Emitting service / log operator | service and deployment logs |
 
-- Kal SQLite records and raw/approved Library documents are authoritative for Kal.
-- Beepy business database records and application-owned file objects are authoritative for Beepy.
-- Any key material required to interpret encrypted authoritative state is recovery-critical secret material, but it remains outside Git and outside ordinary backup logs.
-- A third-party component's state becomes authoritative only for that component when operators deliberately depend on it and document the decision.
+`REQUIRED`, `REBUILDABLE`, and `EXCLUDED` are backup-policy classes, not synonyms for state classes. A state declaration must choose both.
 
-Authoritative state requires application-consistent snapshots, off-host protection, integrity verification, retention policy, and tested restoration.
+Kal Chroma collections, vector indexes, and embeddings remain `DERIVED`. A warm snapshot may accelerate recovery, but it cannot be the only recovery source or override restored authority. Model downloads and caches are derived only when pinned information and an accessible source can reproduce them; an irreplaceable local artifact must be reclassified before use.
 
-### Derived state
-
-Kal Chroma collections, vector indexes, and embeddings that can be reproduced from authoritative documents are derived. They may be snapshotted as a recovery accelerator, but they cannot be the only recovery source and cannot override restored authority.
-
-Beepy may store computed vectors inside its authoritative database. Kalvin must follow Beepy's restore contract rather than partially removing database content based on a platform assumption that a field is derived.
-
-### Reproducible caches
-
-Model downloads, package caches, embedding-model caches, thumbnails, and temporary extractions are normally excluded from minimum disaster-recovery sets when a pinned manifest and accessible source can reproduce them. A locally created or otherwise irreplaceable model artifact must be reclassified before relying on this rule.
-
-### Configuration and secrets
-
-Public templates and schemas belong in Git. Rendered host configuration does not. Secrets, tokens, passwords, private keys, decryption material, and integration credentials are injected externally and exposed only to the consuming service.
-
-### Temporary runtime state
-
-Sockets, PID files, locks, readiness probes, transient working files, and other process-lifetime state are non-authoritative. They are recreated at service start and are not restored as application truth.
+Beepy may store computed vectors inside its authoritative database. Kalvin follows Beepy's restore contract rather than partially deleting database content based on a platform assumption.
 
 ## Ownership consequences
 
@@ -59,4 +47,4 @@ Kalvin coordinates state placement and recovery order but does not inspect busin
 8. Recreate caches from pinned sources where practical.
 9. Validate data integrity, owner isolation, the Kal–Beepy contract, health, and readiness.
 
-No restore implementation exists in this bootstrap.
+No restore implementation exists in Phase 4C.

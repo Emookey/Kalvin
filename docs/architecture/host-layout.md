@@ -59,6 +59,21 @@ The paths below describe a future deployed host namespace. They are not instruct
     <source-id>/             # storage profile or explicit repository mount only
 ```
 
+## Namespace contract
+
+| Category | Host namespace | Rule |
+| --- | --- | --- |
+| Code | `/opt/kalvin/platform`, `/opt/kalvin/apps/{kal,beepy}` | Immutable, administrator-owned pinned releases; no runtime writes |
+| Configuration | `/etc/kalvin/{platform,kal,beepy,...}` | Rendered non-secret host configuration; service-readable only as required |
+| Secrets | `/etc/kalvin/secrets/<service>` or `/run/kalvin/credentials/<service>` | External provider material or ephemeral views; never Git; per-service access |
+| Authoritative state | `/var/lib/kalvin/<owner>` | Persistent, owner-writable, separately classified and consistently backed up |
+| Derived cache | `/var/cache/kalvin/<owner>` | Rebuildable only; never the sole recovery source |
+| Runtime state | `/run/kalvin/<owner>` | Ephemeral sockets, locks, and process state |
+| Logs | `/var/log/kalvin/<owner>` when file logs are selected | Service-separated, redacted, retention-bounded, non-authoritative |
+| Backup storage | `/srv/kalvin-backups` | Storage role or explicit repository mount only; absent as Core authority |
+
+The braces in this table denote service-specific subdirectories, not a literal shared directory. Independent databases may use service-native storage behind the same ownership contract; Kalvin records the mapping without claiming the schema.
+
 ## Ownership rules
 
 - Release trees under `/opt` are administrator-owned and read-only to runtime services.
