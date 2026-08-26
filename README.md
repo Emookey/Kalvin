@@ -70,8 +70,13 @@ Canonical Kal currently keeps RAG indexing status in process-local memory. Durab
 
 - [Platform overview](docs/architecture/overview.md)
 - [Repository boundaries](docs/architecture/repository-boundaries.md)
+- [Data and state architecture](docs/architecture/data-and-state.md)
+- [Conceptual host layout](docs/architecture/host-layout.md)
+- [Deployment profiles](docs/deployment/profiles.md)
+- [Portability and readiness](docs/deployment/portability-and-readiness.md)
+- [Backup and restore model](docs/operations/backup-restore-model.md)
 
-Additional state, host-layout, profile, portability, backup, migration, and development documents are added by the later bootstrap commits in this candidate.
+Migration and development-governance documents are added by the final bootstrap commit in this candidate.
 
 ## Future implementation locations
 
