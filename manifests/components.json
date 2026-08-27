@@ -15,7 +15,15 @@
         {"component": "model-runtime", "kind": "OPTIONAL_INTEGRATION", "required": false, "partial_operation": "Kal follows its application-owned remote or local model-runtime contract."}
       ],
       "exposure": {"default": "PLATFORM_INTERNAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY"]},
+      "identity_class": "KAL_APPLICATION",
       "privilege_class": "UNPRIVILEGED_APPLICATION",
+      "configuration_requirements": [
+        {"id": "kal.application-configuration", "source_layer": "HOST_LOCAL_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"},
+        {"id": "kal.model-interface", "source_layer": "PROFILE_CONFIGURATION", "required": true, "conflict_policy": "HIGHER_PRECEDENCE_WINS"}
+      ],
+      "secret_references": [
+        {"id": "kal.application-secret", "required": true}
+      ],
       "state_requirements": [
         {"id": "kal-authoritative", "class": "AUTHORITATIVE", "path": "/var/lib/kalvin/kal", "backup": "REQUIRED", "owner": "KAL"},
         {"id": "kal-vector-index", "class": "DERIVED", "path": "/var/cache/kalvin/kal/vector", "backup": "REBUILDABLE", "owner": "KAL"},
@@ -40,7 +48,16 @@
         {"component": "kal", "kind": "OPTIONAL_INTEGRATION", "required": false, "partial_operation": "Beepy local business modes may remain available while the scoped Kal technical integration is degraded."}
       ],
       "exposure": {"default": "PLATFORM_INTERNAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY"]},
+      "identity_class": "BEEPY_SERVICE",
       "privilege_class": "UNPRIVILEGED_APPLICATION",
+      "configuration_requirements": [
+        {"id": "beepy.application-configuration", "source_layer": "HOST_LOCAL_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"},
+        {"id": "beepy.kal-client-scope", "source_layer": "PROFILE_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"}
+      ],
+      "secret_references": [
+        {"id": "beepy.application-secret", "required": true},
+        {"id": "beepy.kal-client-credential", "required": true}
+      ],
       "state_requirements": [
         {"id": "beepy-authoritative", "class": "AUTHORITATIVE", "path": "/var/lib/kalvin/beepy", "backup": "REQUIRED", "owner": "BEEPY"},
         {"id": "beepy-derived-cache", "class": "DERIVED", "path": "/var/cache/kalvin/beepy", "backup": "REBUILDABLE", "owner": "BEEPY"},
@@ -63,7 +80,15 @@
       "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
       "dependencies": [],
       "exposure": {"default": "PLATFORM_INTERNAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL"]},
+      "identity_class": "MODEL_RUNTIME",
       "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "configuration_requirements": [
+        {"id": "model-runtime.provider-selection", "source_layer": "PROFILE_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"},
+        {"id": "model-runtime.endpoint-contract", "source_layer": "HOST_LOCAL_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"}
+      ],
+      "secret_references": [
+        {"id": "model-runtime.provider-credential", "required": false}
+      ],
       "state_requirements": [
         {"id": "model-runtime-cache", "class": "DERIVED", "path": "/var/cache/kalvin/model-runtime", "backup": "REBUILDABLE", "owner": "SELECTED_PROVIDER"},
         {"id": "model-runtime-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/model-runtime", "backup": "EXCLUDED", "owner": "KALVIN"},
@@ -85,7 +110,12 @@
       "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
       "dependencies": [],
       "exposure": {"default": "HOST_INTERNAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY"]},
+      "identity_class": "MONITORING",
       "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "configuration_requirements": [
+        {"id": "monitoring.signal-policy", "source_layer": "PROFILE_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"}
+      ],
+      "secret_references": [],
       "state_requirements": [
         {"id": "monitoring-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/monitoring", "backup": "EXCLUDED", "owner": "KALVIN"},
         {"id": "monitoring-runtime", "class": "EPHEMERAL", "path": "/run/kalvin/monitoring", "backup": "EXCLUDED", "owner": "KALVIN"},
@@ -105,7 +135,15 @@
       "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
       "dependencies": [],
       "exposure": {"default": "PROCESS_LOCAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL"]},
+      "identity_class": "BACKUP_SUBMISSION",
       "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "configuration_requirements": [
+        {"id": "backup-client.dataset-policy", "source_layer": "PROFILE_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"},
+        {"id": "backup-client.destination-contract", "source_layer": "HOST_LOCAL_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"}
+      ],
+      "secret_references": [
+        {"id": "backup-client.submission-identity", "required": true}
+      ],
       "state_requirements": [
         {"id": "backup-client-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/backup-client", "backup": "EXCLUDED", "owner": "KALVIN"},
         {"id": "backup-client-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/backup-client", "backup": "EXCLUDED", "owner": "KALVIN"},
@@ -126,7 +164,15 @@
       "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
       "dependencies": [],
       "exposure": {"default": "PLATFORM_INTERNAL", "allowed": ["HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY"]},
+      "identity_class": "STORAGE_RETENTION",
       "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "configuration_requirements": [
+        {"id": "storage-backup-target.repository-contract", "source_layer": "HOST_LOCAL_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"},
+        {"id": "storage-backup-target.retention-policy", "source_layer": "PROFILE_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"}
+      ],
+      "secret_references": [
+        {"id": "storage-backup-target.repository-identity", "required": true}
+      ],
       "state_requirements": [
         {"id": "storage-backup-payloads", "class": "AUTHORITATIVE", "path": "/srv/kalvin-backups/sources", "backup": "REQUIRED", "owner": "KALVIN_STORAGE"},
         {"id": "storage-retention-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/storage-backup-target", "backup": "EXCLUDED", "owner": "KALVIN_STORAGE"},
@@ -148,7 +194,14 @@
       "version": {"source": "IMPLEMENTATION_LOCK", "repository_id": null, "immutable_resolution": true},
       "dependencies": [],
       "exposure": {"default": "HOST_INTERNAL", "allowed": ["HOST_INTERNAL", "OVERLAY"]},
+      "identity_class": "PLATFORM_SERVICE",
       "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "configuration_requirements": [
+        {"id": "network-overlay.provider-selection", "source_layer": "HOST_LOCAL_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"}
+      ],
+      "secret_references": [
+        {"id": "network-overlay.provider-credential", "required": true}
+      ],
       "state_requirements": [
         {"id": "network-overlay-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/network-overlay", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
         {"id": "network-overlay-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/network-overlay", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
@@ -171,7 +224,14 @@
         {"component": "model-runtime", "kind": "STARTUP", "required": true, "partial_operation": "The compatibility component remains stopped when its selected runtime is unavailable."}
       ],
       "exposure": {"default": "HOST_INTERNAL", "allowed": ["PROCESS_LOCAL", "HOST_INTERNAL", "PLATFORM_INTERNAL", "LAN", "OVERLAY"]},
+      "identity_class": "COMPATIBILITY_SERVICE",
       "privilege_class": "UNPRIVILEGED_APPLICATION",
+      "configuration_requirements": [
+        {"id": "legacy-open-webui-compatibility.consumer-contract", "source_layer": "PROFILE_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"}
+      ],
+      "secret_references": [
+        {"id": "legacy-open-webui-compatibility.application-secret", "required": true}
+      ],
       "state_requirements": [
         {"id": "legacy-ui-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/open-webui", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
         {"id": "legacy-ui-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/open-webui", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},
@@ -194,7 +254,15 @@
         {"component": "kal", "kind": "READINESS", "required": true, "partial_operation": "Public testing remains disabled until the selected test application is ready."}
       ],
       "exposure": {"default": "PUBLIC", "allowed": ["PUBLIC"]},
+      "identity_class": "PUBLIC_BOUNDARY",
       "privilege_class": "LIMITED_PLATFORM_SERVICE",
+      "configuration_requirements": [
+        {"id": "public-test-exposure.approval", "source_layer": "PROFILE_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"},
+        {"id": "public-test-exposure.authentication-contract", "source_layer": "HOST_LOCAL_CONFIGURATION", "required": true, "conflict_policy": "FAIL_CLOSED"}
+      ],
+      "secret_references": [
+        {"id": "public-test-exposure.boundary-credential", "required": true}
+      ],
       "state_requirements": [
         {"id": "public-test-configuration", "class": "CONFIGURATION", "path": "/etc/kalvin/public-test-exposure", "backup": "EXCLUDED", "owner": "KALVIN"},
         {"id": "public-test-secrets", "class": "SECRET", "path": "/etc/kalvin/secrets/public-test-exposure", "backup": "EXCLUDED", "owner": "SELECTED_PROVIDER"},

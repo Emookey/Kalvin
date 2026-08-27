@@ -16,7 +16,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "owner", "purpose", "allowed_profiles", "default_requirement_by_profile", "version", "dependencies", "exposure", "privilege_class", "state_requirements", "health_readiness_class", "health_gate", "readiness_gates", "compatibility"],
+        "required": ["id", "owner", "purpose", "allowed_profiles", "default_requirement_by_profile", "version", "dependencies", "exposure", "identity_class", "privilege_class", "configuration_requirements", "secret_references", "state_requirements", "health_readiness_class", "health_gate", "readiness_gates", "compatibility"],
         "properties": {
           "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
           "owner": {"type": "string", "minLength": 1},
@@ -66,6 +66,33 @@
             }
           },
           "privilege_class": {"enum": ["UNPRIVILEGED_APPLICATION", "LIMITED_PLATFORM_SERVICE", "HOST_ADMINISTRATIVE", "EXTERNAL_HOST_MANAGEMENT"]},
+          "identity_class": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+          "configuration_requirements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "source_layer", "required", "conflict_policy"],
+              "properties": {
+                "id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"},
+                "source_layer": {"enum": ["REPOSITORY_SAFE_DEFAULTS", "PROFILE_CONFIGURATION", "HOST_LOCAL_CONFIGURATION", "DESIGNATED_GENERATED_VALUES"]},
+                "required": {"type": "boolean"},
+                "conflict_policy": {"enum": ["FAIL_CLOSED", "HIGHER_PRECEDENCE_WINS"]}
+              }
+            }
+          },
+          "secret_references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "required"],
+              "properties": {
+                "id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"},
+                "required": {"type": "boolean"}
+              }
+            }
+          },
           "state_requirements": {
             "type": "array",
             "items": {
@@ -77,7 +104,8 @@
                 "class": {"enum": ["AUTHORITATIVE", "DERIVED", "EPHEMERAL", "CONFIGURATION", "SECRET", "LOG"]},
                 "path": {"type": "string", "pattern": "^/(?:opt/kalvin|etc/kalvin|var/(?:lib|cache|log)/kalvin|run/kalvin|srv/kalvin-backups)(?:/|$)"},
                 "backup": {"enum": ["REQUIRED", "REBUILDABLE", "EXCLUDED"]},
-                "owner": {"type": "string", "minLength": 1}
+                "owner": {"type": "string", "minLength": 1},
+                "policy_justification": {"type": "string", "minLength": 1}
               }
             }
           },

@@ -4,7 +4,7 @@
   "title": "Kalvin architecture vocabulary catalog",
   "type": "object",
   "additionalProperties": false,
-  "required": ["$schema", "schema_version", "contract_status", "operational", "state_classes", "backup_classes", "exposure_classes", "privilege_classes", "dependency_kinds", "profile_requirements", "readiness_classes", "compatibility_statuses"],
+  "required": ["$schema", "schema_version", "contract_status", "operational", "state_classes", "backup_classes", "exposure_classes", "privilege_classes", "identity_classes", "configuration_source_layers", "configuration_conflict_policies", "dependency_kinds", "profile_requirements", "readiness_classes", "compatibility_statuses"],
   "properties": {
     "$schema": {"type": "string"},
     "schema_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
@@ -31,6 +31,20 @@
     "backup_classes": {"type": "array", "items": {"type": "string"}},
     "exposure_classes": {"type": "array", "items": {"type": "string"}},
     "privilege_classes": {"type": "array", "items": {"type": "string"}},
+    "identity_classes": {"type": "array", "minItems": 12, "items": {"type": "string"}},
+    "configuration_source_layers": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "REPOSITORY_SAFE_DEFAULTS"},
+        {"const": "PROFILE_CONFIGURATION"},
+        {"const": "HOST_LOCAL_CONFIGURATION"},
+        {"const": "DESIGNATED_GENERATED_VALUES"}
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "configuration_conflict_policies": {"type": "array", "items": {"enum": ["FAIL_CLOSED", "HIGHER_PRECEDENCE_WINS"]}},
     "dependency_kinds": {"type": "array", "items": {"type": "string"}},
     "profile_requirements": {"type": "array", "items": {"type": "string"}},
     "readiness_classes": {"type": "array", "items": {"type": "string"}},

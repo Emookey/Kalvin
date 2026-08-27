@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "resolved-plan.schema.json",
+  "title": "Kalvin deterministic resolved plan contract",
+  "description": "Secret-free declared intent calculated by Phase 4D; never a deployed or observed-state record.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "kind",
+    "architecture_validity",
+    "resolution_status",
+    "production_readiness",
+    "selected_profile",
+    "profile_role",
+    "production_mode",
+    "backup_posture",
+    "component_policy",
+    "components",
+    "repository_locks",
+    "implementation_locks",
+    "dependency_order",
+    "dependencies",
+    "configuration_precedence",
+    "configuration_requirements",
+    "secret_references",
+    "state_declarations",
+    "exposure",
+    "identity_and_privilege",
+    "readiness_gates",
+    "compatibility_requirements",
+    "unresolved_external_blockers",
+    "observed_or_deployed_state"
+  ],
+  "properties": {
+    "contract_version": {"const": "1.0.0"},
+    "kind": {"const": "KALVIN_RESOLVED_PLAN"},
+    "architecture_validity": {"const": "VALID"},
+    "resolution_status": {"enum": ["RESOLVED", "UNRESOLVED"]},
+    "production_readiness": {"enum": ["READY", "BLOCKED_EXTERNAL_GATE", "NOT_APPLICABLE"]},
+    "selected_profile": {"enum": ["lab", "core", "storage"]},
+    "profile_role": {"type": "string", "minLength": 1},
+    "production_mode": {"type": "boolean"},
+    "backup_posture": {"type": "string", "minLength": 1},
+    "component_policy": {"type": "array", "items": {"$ref": "#/$defs/componentPolicy"}},
+    "components": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/component"}},
+    "repository_locks": {"type": "array", "items": {"$ref": "#/$defs/repositoryLock"}},
+    "implementation_locks": {"type": "array", "items": {"$ref": "#/$defs/implementationLock"}},
+    "dependency_order": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startup", "health", "readiness", "optional_integrations"],
+      "properties": {
+        "startup": {"type": "array", "items": {"$ref": "#/$defs/dependency"}},
+        "health": {"type": "array", "items": {"$ref": "#/$defs/dependency"}},
+        "readiness": {"type": "array", "items": {"$ref": "#/$defs/dependency"}},
+        "optional_integrations": {"type": "array", "items": {"$ref": "#/$defs/dependency"}}
+      }
+    },
+    "configuration_precedence": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "string"}},
+    "configuration_requirements": {"type": "array", "items": {"type": "object"}},
+    "secret_references": {"type": "array", "items": {"type": "object"}},
+    "state_declarations": {"type": "array", "items": {"type": "object"}},
+    "exposure": {"type": "array", "items": {"type": "object"}},
+    "identity_and_privilege": {"type": "array", "items": {"type": "object"}},
+    "readiness_gates": {"type": "array", "items": {"type": "object"}},
+    "compatibility_requirements": {"type": "array", "items": {"type": "object"}},
+    "unresolved_external_blockers": {"type": "array", "items": {"type": "object"}},
+    "observed_or_deployed_state": {"const": "NOT_EVALUATED_BY_PHASE_4D"}
+  },
+  "$defs": {
+    "componentPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "disposition"],
+      "properties": {
+        "id": {"type": "string"},
+        "disposition": {"enum": ["SELECTED_REQUIRED", "SELECTED_OPTIONAL", "AVAILABLE_DEFAULT_OFF", "FORBIDDEN"]}
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "owner", "requirement", "purpose", "version_source"],
+      "properties": {
+        "id": {"type": "string"},
+        "owner": {"type": "string"},
+        "requirement": {"enum": ["REQUIRED", "OPTIONAL"]},
+        "purpose": {"type": "string"},
+        "version_source": {"enum": ["REPOSITORY_LOCK", "IMPLEMENTATION_LOCK"]}
+      }
+    },
+    "repositoryLock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "repository_id", "desired_ref", "resolved_commit", "source_identity"],
+      "properties": {
+        "component": {"type": "string"},
+        "repository_id": {"type": "string"},
+        "desired_ref": {"type": "string"},
+        "resolved_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "source_identity": {"type": ["string", "null"]}
+      }
+    },
+    "implementationLock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "desired_ref", "resolved_version", "source_identity"],
+      "properties": {
+        "component": {"type": "string"},
+        "desired_ref": {"type": "string"},
+        "resolved_version": {"type": "string"},
+        "source_identity": {"type": ["string", "null"]}
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "dependency", "required", "selected", "partial_operation"],
+      "properties": {
+        "component": {"type": "string"},
+        "dependency": {"type": "string"},
+        "required": {"type": "boolean"},
+        "selected": {"type": "boolean"},
+        "partial_operation": {"type": "string"}
+      }
+    }
+  }
+}
