@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0.0",
+  "locks": [
+    {"kind": "IMPLEMENTATION", "component_id": "monitoring", "desired_ref": "monitoring-contract", "resolved_version": "1.0.0", "source_identity": "synthetic-component-catalog"},
+    {"kind": "IMPLEMENTATION", "component_id": "storage-backup-target", "desired_ref": "storage-target-contract", "resolved_version": "1.3.0", "source_identity": "synthetic-component-catalog"}
+  ]
+}

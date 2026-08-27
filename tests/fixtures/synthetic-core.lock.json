@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "locks": [
+    {"kind": "REPOSITORY", "repository_id": "kal", "desired_ref": "refs/tags/v1.0.0", "resolved_commit": "1111111111111111111111111111111111111111", "source_identity": "synthetic-public-source"},
+    {"kind": "REPOSITORY", "repository_id": "beepy", "desired_ref": "refs/tags/v2.0.0", "resolved_commit": "2222222222222222222222222222222222222222", "source_identity": "synthetic-public-source"},
+    {"kind": "IMPLEMENTATION", "component_id": "model-runtime", "desired_ref": "provider-neutral-runtime", "resolved_version": "1.2.3", "source_identity": "synthetic-component-catalog"},
+    {"kind": "IMPLEMENTATION", "component_id": "monitoring", "desired_ref": "monitoring-contract", "resolved_version": "1.0.0", "source_identity": "synthetic-component-catalog"},
+    {"kind": "IMPLEMENTATION", "component_id": "backup-client", "desired_ref": "backup-client-contract", "resolved_version": "1.1.0", "source_identity": "synthetic-component-catalog"}
+  ]
+}

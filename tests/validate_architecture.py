@@ -1,4 +1,4 @@
-"""Validate Kalvin's non-operational Phase 4C architecture contracts.
+"""Validate Kalvin's declarative architecture contracts.
 
 This standard-library-only validator reads repository declarations. It never
 performs deployment, contacts a service, resolves a secret, or mutates a host.
@@ -315,7 +315,7 @@ check(
     "no application source is vendored",
     not any(path.parts[0] in {"kal", "beepy", "apps", "vendor"} for path in (item.relative_to(ROOT) for item in all_paths)),
 )
-check("no LICENSE was invented", not any(path.name.upper().startswith("LICENSE") for path in all_paths))
+check("AGPL license is tracked", "LICENSE" in tracked_relative)
 
 ignored_examples = [
     ".env",
