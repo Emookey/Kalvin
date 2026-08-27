@@ -4,7 +4,7 @@ Kalvin is the platform, infrastructure, and orchestration layer for independentl
 
 ## Repository status
 
-**CURRENT — declarative architecture candidate.** This repository contains the Phase 4B charter plus Phase 4C reference profiles, component/state catalogs, JSON Schemas, and static contract validation. The declarations are deliberately marked non-operational. There are no Compose stacks, systemd units, installers, network rules, backup/restore executables, or host-migration tools, and the repository is not production-ready.
+**CURRENT — declarative architecture plus read-only resolution engine.** This repository contains the Phase 4B charter, Phase 4C reference profiles and catalogs, and the Phase 4D executable validator/resolver. Phase 4D reads declarations and a secret-free immutable lock, then writes a deterministic resolved plan to stdout. It does not inspect a host or deploy anything. There are no Compose stacks, systemd units, installers, network rules, backup/restore executables, or host-migration tools, and the repository is not production-ready.
 
 **TARGET — portable platform.** A later implementation phase may build narrowly scoped tooling against these reviewed contracts. Documentation continues to distinguish designed behavior from implemented and validated behavior.
 
@@ -54,7 +54,20 @@ Kalvin may deploy and configure a pinned Beepy release. Business application log
 - `core` is the future primary application/compute role. It hosts selected platform services, Kal, Beepy, and model compute as appropriate, and sends backups outward.
 - `storage` is the backup/NAS/retention role planned for suitable storage infrastructure. It does not run Kal or Beepy by default.
 
-Profiles are **CURRENT architecture contracts**, explicit, and composable. They declare intent and constraints; they are not executable deployment files.
+Profiles are **CURRENT architecture contracts**, explicit, and composable. The resolver reads them as deployment intent, but they remain declarations rather than executable deployment files.
+
+## Read-only validation and resolution
+
+From the repository root:
+
+```text
+python3 -m kalvin validate
+python3 -m kalvin resolve --profile lab --lock tests/fixtures/synthetic-lab.lock.json --format text
+python3 -m kalvin resolve --profile core --lock tests/fixtures/synthetic-core.lock.json --format json
+python3 -m kalvin resolve --profile storage --lock tests/fixtures/synthetic-storage.lock.json --format text
+```
+
+The examples are explicitly synthetic and are not production locks. The CLI has no apply, deploy, install, service-control, host-detection, network, or arbitrary file-output command. A successful resolution means the declarations and immutable inputs form a structurally resolved plan; it does not mean software ran or readiness evidence passed.
 
 ## Portability objective
 
@@ -74,6 +87,7 @@ Canonical Kal currently keeps RAG indexing status in process-local memory. Durab
 - [Conceptual host layout](docs/architecture/host-layout.md)
 - [Deployment profiles](docs/deployment/profiles.md)
 - [Declarative deployment model](docs/deployment/declarative-model.md)
+- [Validation and resolution engine](docs/deployment/validation-and-resolution-engine.md)
 - [Component model](docs/deployment/component-model.md)
 - [Repository and version pinning](docs/deployment/repository-pinning.md)
 - [Configuration and secret references](docs/deployment/configuration-and-secrets.md)
@@ -85,11 +99,11 @@ Canonical Kal currently keeps RAG indexing status in process-local memory. Durab
 - [GoodWill migration and legacy compatibility](docs/migration/goodwill-and-compatibility.md)
 - [Repository map and roadmap](docs/development/repository-map-and-roadmap.md)
 
-## Architecture contracts and future implementation
+## Architecture contracts and bounded implementation
 
-Reference profiles live under `deploy/profiles/`, shared catalogs under `manifests/`, their syntax contracts under `schemas/`, and static architecture validation under `tests/`. These files describe and validate intent only.
+Reference profiles live under `deploy/profiles/`, shared catalogs under `manifests/`, syntax contracts under `schemas/`, the read-only engine under `kalvin/`, and isolated validation under `tests/`. The engine calculates intent only.
 
-**PLANNED — absent today.** Operational orchestration and bounded host tooling will be introduced only after review. Their eventual location and responsibility are described in the repository map; no empty implementation directory has been created in anticipation.
+**PLANNED — absent today.** Host preflight, operational orchestration, persistence, and bounded host tooling remain later, separately reviewed phases. Phase 4D contains no apply/deploy path.
 
 ## License
 

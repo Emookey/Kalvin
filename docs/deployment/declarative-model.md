@@ -1,6 +1,6 @@
 # Declarative Deployment Model
 
-Status: **CURRENT Phase 4C architecture contract; non-operational.**
+Status: **CURRENT architecture contract with Phase 4D read-only resolution.**
 
 ## Layers
 
@@ -10,24 +10,25 @@ Kalvin separates five kinds of input and evidence:
 2. **Profiles** select a primary host role and declare required, optional, and forbidden components plus backup, exposure, repository, and readiness policy.
 3. **Desired deployment manifests** record operator intent: profile, human-friendly refs, selected optional components, logical host-configuration reference, secret references, and approved compatibility entries.
 4. **Resolution inputs** bind desired refs to immutable commits or immutable implementation versions, combine repository-safe defaults with profile and host-local configuration, and resolve external secret references without copying secret values into Git.
-5. **Resolved deployment records** report the exact revisions and component versions that ran, configuration revision, application-exposed migration state, readiness results, host role, and deployment time. They contain references and results, never secret values.
+5. **Resolved plans** are deterministic Phase 4D calculations of exact selected versions, dependencies, configuration and secret-reference requirements, state/backup intent, exposure, privilege, and unverified readiness gates. They contain no timestamp or host observation.
+6. **Deployed/observed records** are a future concern. They would report what actually ran, readiness evidence, host role, and deployment time. Phase 4D neither creates nor persists them.
 
-Catalogs and profiles are committed public contracts. Host-local configuration, provider bindings, secret values, authoritative backup payloads, and ordinary resolved records are host state outside Git. A deliberately sanitized record may be retained as review evidence, but it is never a substitute for current host state.
+Catalogs and profiles are committed public contracts. Host-local configuration, provider bindings, secret values, authoritative backup payloads, and future deployed records are host state outside Git. Phase 4D plans go from input files to memory to stdout and are not persisted by the engine.
 
 ## Desired versus resolved state
 
-A desired manifest answers “what should this host run?” A resolved record answers “what exact state was observed after deployment?” The same desired ref can resolve differently over time, so production validation always requires an immutable resolution before host mutation.
+A desired profile answers “what should this deployment require?” A resolved plan answers “what exact declared requirements result from this profile and lock?” A future deployed/observed record answers “what actually ran?” The same desired ref can resolve differently over time, so every Phase 4D plan binds selected repository refs to full immutable commits.
 
-The future resolver must:
+The Phase 4D resolver:
 
 - reject an unknown profile, component, gate, or vocabulary value;
 - reject optional components not explicitly enabled and forbidden components that are enabled;
-- resolve every selected repository/component version before mutation;
+- resolves every selected repository/component version before producing a plan;
 - require an immutable commit for every Git repository, including development refs in `lab`;
 - reject `core` development refs;
 - keep source/mirror selection outside correctness: the verified object identity is authoritative;
-- reject unresolved secret references and missing required configuration;
-- calculate profile readiness from required gates and record failures without enabling exposure.
+- reports logical secret and configuration requirements without reading their values;
+- carries external readiness gates as required and unverified without treating them as malformed architecture.
 
 ## Composition and conflict rules
 
@@ -35,8 +36,8 @@ A desired deployment selects exactly one base profile. Optional selection can na
 
 Canonical configuration wins only when the competing values are equivalent. Canonical and compatibility values that conflict cause validation failure. A compatibility entry must name its current consumer, canonical replacement, justification, test, and retirement gate; absence of canonical production configuration never triggers an implicit legacy fallback.
 
-## Non-operational guarantee
+## Read-only execution boundary
 
-The reference JSON has no shell, container, service-manager, firewall, storage, or network procedures. JSON was selected instead of YAML for this phase so the standard-library validator can parse every declaration deterministically without adding a package dependency. A later renderer may accept another human-edited format only if it preserves these contracts and validates before mutation.
+The reference JSON has no shell, container, service-manager, firewall, storage, or network procedures. JSON remains the declaration format. Phase 4D uses the declared `jsonschema` dependency for Draft 2020-12 validation and contains no process execution, network client, host inspection, or filesystem-output path.
 
-No architecture artifact is an instruction to change a host.
+No architecture artifact or resolved plan is an instruction to change a host.

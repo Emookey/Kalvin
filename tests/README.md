@@ -1,13 +1,14 @@
 # Architecture Contract Validation
 
-Status: **CURRENT static validation; not deployment tooling.**
+Status: **CURRENT isolated engine validation; no deployment capability.**
 
 Run from the repository root:
 
 ```text
 python3 tests/validate_architecture.py
+python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
-The validator uses only the Python standard library. It parses reference JSON, applies the local JSON Schema subset used by the repository, checks catalog/profile cross-references, validates state/backup/exposure/privilege/readiness invariants, checks repository independence rules, rejects operational command text in declarations, resolves internal Markdown file links, and scans public text for common private-material patterns.
+The retained architecture validator uses only the Python standard library. The Phase 4D engine declares `jsonschema` for full Draft 2020-12 validation. The unit suite covers positive Lab/Core/Storage resolution, immutable locks, stable output, state/backup/configuration/secret handling, external readiness, negative policy cases, CLI exits, and the tested host-mutation boundary.
 
-It does not render configuration, resolve secret references, acquire repositories, contact services, inspect runtime state, or change a host. Passing means the repository contracts are internally consistent; it does not establish operational or production readiness.
+Tests use synthetic locks and temporary test directories only. They do not render configuration, resolve secret values, acquire repositories, contact services, inspect runtime state, or change a host. Passing establishes the tested declarative boundary, not operational or production readiness.

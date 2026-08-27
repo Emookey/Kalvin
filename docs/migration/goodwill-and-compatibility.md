@@ -64,6 +64,6 @@ No GoodWill file, ref, remote, history, or GitHub state is modified by this arch
 
 ## Licensing boundary
 
-GoodWill has no tracked license file, Beepy has no tracked license file, and Kal declares AGPL-3.0-or-later. Those facts do not select terms for Kalvin or authorize copying legacy content.
+GoodWill has no tracked license file, while Kalvin and Kal declare `AGPL-3.0-or-later`. Beepy's licensing remains independently governed. These facts do not authorize copying legacy content across repository boundaries.
 
-**LICENSE POLICY REQUIRES HUMAN DECISION.** Kalvin does not inherit Kal's license by deployment relationship, and this architecture adds no `LICENSE` file.
+Kalvin's approved `AGPL-3.0-or-later` terms are recorded in its own `LICENSE`; they were adopted explicitly rather than inherited through a deployment relationship.

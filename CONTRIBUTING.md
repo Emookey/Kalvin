@@ -89,6 +89,6 @@ Also verify:
 - no secret, private endpoint, runtime state, or generated artifact is tracked;
 - profile and repository ownership remain explicit;
 - tests match the risk and do not contact live systems by default;
-- a license claim has not been introduced without the human decision.
+- new source identifies the repository's approved `AGPL-3.0-or-later` terms where technically appropriate.
 
 Use clear, focused commit messages that describe the outcome. Review every staged path before committing or publishing.
