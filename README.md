@@ -91,8 +91,6 @@ Reference profiles live under `deploy/profiles/`, shared catalogs under `manifes
 
 **PLANNED — absent today.** Operational orchestration and bounded host tooling will be introduced only after review. Their eventual location and responsibility are described in the repository map; no empty implementation directory has been created in anticipation.
 
-## License status
+## License
 
-No Kalvin license has been selected, and this repository contains no `LICENSE` file.
-
-**LICENSE POLICY REQUIRES HUMAN DECISION.** Kal's AGPL-3.0-or-later license does not automatically become Kalvin's license merely because Kalvin may deploy Kal. License selection remains a publication and governance decision before final public release is settled.
+Kalvin is licensed under the GNU Affero General Public License version 3 or later (`AGPL-3.0-or-later`). See `LICENSE` for the full license terms.
