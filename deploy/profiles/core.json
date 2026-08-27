@@ -1,0 +1,53 @@
+{
+  "$schema": "../../schemas/deployment-profile.schema.json",
+  "schema_version": "1.0.0",
+  "contract_status": "reference-architecture",
+  "operational": false,
+  "id": "core",
+  "role": "PRIMARY_APPLICATION_COMPUTE",
+  "production_mode": true,
+  "purpose": "Future primary Kalvin application and compute host with outbound authoritative backup participation.",
+  "components": [
+    {"id": "kal", "requirement": "REQUIRED", "default_enabled": true},
+    {"id": "beepy", "requirement": "REQUIRED", "default_enabled": true},
+    {"id": "model-runtime", "requirement": "REQUIRED", "default_enabled": true},
+    {"id": "monitoring", "requirement": "REQUIRED", "default_enabled": true},
+    {"id": "backup-client", "requirement": "REQUIRED", "default_enabled": true},
+    {"id": "storage-backup-target", "requirement": "FORBIDDEN", "default_enabled": false},
+    {"id": "network-overlay", "requirement": "OPTIONAL", "default_enabled": false},
+    {"id": "legacy-open-webui-compatibility", "requirement": "OPTIONAL", "default_enabled": false},
+    {"id": "public-test-exposure", "requirement": "FORBIDDEN", "default_enabled": false}
+  ],
+  "required_readiness_gates": [
+    "platform.contracts-valid",
+    "repositories.resolved",
+    "configuration.complete",
+    "secrets.resolved",
+    "selected-components.ready",
+    "authoritative-state.ready",
+    "application.migrations-complete",
+    "application.authorization-validated",
+    "derived-state.reconciled",
+    "backup.outbound-ready",
+    "backup.pre-update-verified",
+    "identity.separation-validated",
+    "exposure.policy-valid",
+    "kal.health",
+    "kal.rag-status-durable",
+    "beepy.health",
+    "model-runtime.health",
+    "monitoring.health",
+    "backup-client.health"
+  ],
+  "default_exposure_ceiling": "OVERLAY",
+  "exposure_exceptions": [],
+  "backup_posture": "OUTBOUND_AUTHORITATIVE_BACKUP_REQUIRED",
+  "repository_policy": "REVIEWED_REF_AND_IMMUTABLE_RESOLUTION_REQUIRED",
+  "compatibility_policy": {"enabled_by_default": false, "implicit_fallback": false, "allowed_statuses": ["OPTIONAL", "LEGACY"]},
+  "profile_invariants": [
+    "Core is not the authoritative long-term backup repository.",
+    "Development application refs are invalid in production mode.",
+    "Application security and migrations remain application-owned.",
+    "Exposure remains disabled until all required readiness gates pass."
+  ]
+}

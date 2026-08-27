@@ -1,0 +1,44 @@
+{
+  "$schema": "../schemas/repository-catalog.schema.json",
+  "schema_version": "1.0.0",
+  "contract_status": "reference-architecture",
+  "operational": false,
+  "source_binding": {
+    "policy": "HOST_CONFIGURED_MIRROR",
+    "purpose": "Map logical repository IDs to an approved public origin, mirror, or offline source outside the public manifest.",
+    "credentials_in_manifest": false,
+    "correctness_anchor": "VERIFIED_FULL_COMMIT"
+  },
+  "repositories": [
+    {
+      "id": "kalvin",
+      "owner": "KALVIN",
+      "purpose": "Platform architecture and future orchestration implementation.",
+      "submodule": false,
+      "vendored": false,
+      "desired_ref_required": true,
+      "resolved_full_commit_required": true,
+      "profile_ref_policy": {"lab": "DEVELOPMENT_ALLOWED", "core": "REVIEWED_RELEASE_OR_STABLE_REF", "storage": "REVIEWED_RELEASE_OR_STABLE_REF"}
+    },
+    {
+      "id": "kal",
+      "owner": "KAL",
+      "purpose": "Independent assistant application.",
+      "submodule": false,
+      "vendored": false,
+      "desired_ref_required": true,
+      "resolved_full_commit_required": true,
+      "profile_ref_policy": {"lab": "DEVELOPMENT_ALLOWED", "core": "REVIEWED_RELEASE_OR_STABLE_REF", "storage": "NOT_SELECTED"}
+    },
+    {
+      "id": "beepy",
+      "owner": "BEEPY",
+      "purpose": "Independent business/work intelligence application.",
+      "submodule": false,
+      "vendored": false,
+      "desired_ref_required": true,
+      "resolved_full_commit_required": true,
+      "profile_ref_policy": {"lab": "DEVELOPMENT_ALLOWED", "core": "REVIEWED_RELEASE_OR_STABLE_REF", "storage": "NOT_SELECTED"}
+    }
+  ]
+}

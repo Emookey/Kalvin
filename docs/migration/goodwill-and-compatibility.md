@@ -60,10 +60,10 @@ The expected sequence is:
 4. Optionally archive the GoodWill repository on GitHub with separate approval.
 5. Preserve all GoodWill Git history and provenance throughout.
 
-No GoodWill file, ref, remote, history, or GitHub state is modified by this bootstrap.
+No GoodWill file, ref, remote, history, or GitHub state is modified by this architecture phase.
 
 ## Licensing boundary
 
 GoodWill has no tracked license file, Beepy has no tracked license file, and Kal declares AGPL-3.0-or-later. Those facts do not select terms for Kalvin or authorize copying legacy content.
 
-**LICENSE POLICY REQUIRES HUMAN DECISION.** The candidate remains local and contains original bootstrap documentation without a `LICENSE` file.
+**LICENSE POLICY REQUIRES HUMAN DECISION.** Kalvin does not inherit Kal's license by deployment relationship, and this architecture adds no `LICENSE` file.

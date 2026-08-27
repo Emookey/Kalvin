@@ -1,6 +1,6 @@
 # Repository Map and Roadmap
 
-Status: **CURRENT bootstrap contents and PLANNED implementation sequence.**
+Status: **CURRENT Phase 4C architecture contents and PLANNED implementation sequence.**
 
 ## Current repository map
 
@@ -9,75 +9,79 @@ Status: **CURRENT bootstrap contents and PLANNED implementation sequence.**
 AGENTS.md
 CONTRIBUTING.md
 README.md
+deploy/
+  profiles/                     # lab/core/storage intent; non-operational JSON
 docs/
-  architecture/
-    data-and-state.md
-    host-layout.md
-    overview.md
-    repository-boundaries.md
-  deployment/
-    portability-and-readiness.md
-    profiles.md
-  development/
-    repository-map-and-roadmap.md
-  migration/
-    goodwill-and-compatibility.md
-  operations/
-    backup-restore-model.md
+  architecture/                 # charter, ownership, data, and host namespace
+  deployment/                   # declarative lifecycle and security contracts
+  development/                  # this map and roadmap
+  migration/                    # GoodWill provenance and compatibility policy
+  operations/                   # backup/restore policy
+manifests/
+  compatibility.json            # zero implicit aliases; future entry contract
+  components.json               # component/dependency/state catalog
+  readiness-gates.json          # health/readiness vocabulary and ownership
+  repositories.json             # independent repository and pinning policy
+  vocabularies.json              # state, backup, exposure, privilege vocabulary
+schemas/
+  compatibility.schema.json
+  component-catalog.schema.json
+  deployment-profile.schema.json
+  desired-deployment.schema.json
+  readiness-gates.schema.json
+  repository-catalog.schema.json
+  resolved-deployment-record.schema.json
+  vocabularies.schema.json
+tests/
+  README.md
+  validate_architecture.py       # static standard-library contract validation
 ```
 
-Every current directory contains useful documentation. The repository has no deployment implementation, executable, manifest, test fixture, secret, runtime state, or license file.
+Every current directory contains a useful artifact. `deploy/`, `manifests/`, and `schemas/` are reference architecture, not runtime input to an implemented engine. The repository contains no application source, deployment executable, live template, secret, runtime state, backup payload, or license file.
 
-## Planned implementation structure
+## Directory responsibilities
 
-Create a top-level directory only when its first reviewed artifact exists:
-
-| Planned path | Future responsibility |
+| Path | Responsibility |
 | --- | --- |
-| `deploy/profiles/` | Declarative, machine-neutral `lab`, `core`, and `storage` selections |
-| `deploy/templates/` | Public-safe configuration inputs rendered with external values |
-| `manifests/` | Pinned application/dependency identities, state classes, backup-set definitions, and compatibility metadata |
-| `scripts/bootstrap/` | Bounded prerequisite and structure operations after design approval |
-| `scripts/health/` | Secret-safe profile and service checks |
-| `scripts/backup/` | Coordination of application-owned consistent snapshots and transfer/verification |
-| `scripts/restore/` | Controlled restore ordering and calls to owner-provided migrations/reconciliation |
-| `scripts/migration/` | Version-gated, one-time transitions with rollback evidence |
-| `tests/` | Static policy/schema/publication checks and isolated implementation tests |
+| `deploy/profiles/` | Exactly three primary host-role intent contracts with component, readiness, backup, exposure, and compatibility policy |
+| `manifests/` | Shared catalogs and controlled vocabulary independent of a runtime engine |
+| `schemas/` | Syntax contracts for current catalogs/profiles and future desired/resolved deployment records |
+| `docs/` | Human-readable architecture, ownership, lifecycle, migration, and operations policy |
+| `tests/` | Isolated static validation only; no host or service operations |
 
-There is no separate top-level `config/` today because public deployment inputs fit under `deploy/templates/`. Add another category only if a distinct responsibility is demonstrated. Do not create `deploy/compose/` until a reviewed implementation actually selects Compose for a defined scope.
+Create a future top-level directory only with its first reviewed artifact. There is no `scripts/`, `deploy/compose/`, `deploy/templates/`, or application vendor directory today.
 
 ## Roadmap
 
-### Phase 4C — portable deployment architecture
+### Phase 4D — first safe implementation tooling
 
-Design declarative profile schemas and composition rules, component/version manifests, service dependency and exposure contracts, configuration/secret inputs, state classes, and validation interfaces. Phase 4C remains architecture/design unless its authorization says otherwise.
+After human review and canonical integration of the Phase 4C contracts, implement the smallest bounded foundation: offline declaration validation, desired-to-resolved planning, dry-run/preflight behavior, and public-safe configuration interfaces. The exact Phase 4D authorization must decide which mechanism is in scope; these contracts do not preselect Compose or native services.
 
-### Later implementation work
+### Later implementation gates
 
-After review, sequence the work into small gates:
-
-1. prerequisite and bootstrap implementation;
-2. service orchestration for selected profiles;
-3. external configuration and secret injection;
-4. application-consistent backup and restore implementation;
-5. health, readiness, and boundary tooling;
+1. reviewed prerequisite/bootstrap implementation;
+2. service orchestration for one explicitly selected profile;
+3. external configuration and secret-provider adapters;
+4. application-consistent backup and restore transport;
+5. health, readiness, boundary, and drift reporting;
 6. compatibility and host-migration tooling;
-7. clean-install and reconstruction proof for Core;
-8. Storage-role implementation and recovery proof;
+7. Core clean-install and reconstruction proof;
+8. Storage-role implementation, retention, and recovery proof;
 9. reviewed GoodWill superseded notice and eventual archival.
 
 Do not combine these into one privileged installer or treat successful service startup as proof of recovery or authorization.
 
 ## External application dependency
 
-Core production readiness depends on canonical Kal persisting RAG indexing status and passing restart/reconciliation validation. This work belongs in Kal. Kalvin must track and verify the dependency without implementing a parallel database or changing Kal during platform deployment.
+Core production readiness depends on canonical Kal persisting RAG indexing status and passing restart/reconciliation validation. This work belongs in Kal. Kalvin tracks the `kal.rag-status-durable` gate without implementing a parallel database or changing Kal during platform deployment.
 
-## Governance decisions still open
+## Unresolved decisions
 
 - **License:** LICENSE POLICY REQUIRES HUMAN DECISION. Kalvin does not automatically inherit Kal's AGPL-3.0-or-later terms, and no `LICENSE` file exists.
-- **Implementation mechanisms:** Compose, native services, or mixed orchestration remain to be selected per supported profile.
-- **Secret delivery:** the interface and ownership rules are defined, but the production mechanism is not.
-- **Backup technology and retention:** roles and authority rules are defined; products, schedules, retention values, encryption, and replication topology remain open.
-- **Optional extensions:** RMM, Tailscale, public testing, desktop controls, and exporters require separate design and are not platform-core defaults.
+- **Orchestration mechanism:** Compose, native services, or a constrained combination requires Phase 4D review.
+- **Secret provider:** the reference/ownership interface is fixed; production provider selection is open.
+- **Backup technology:** consistency, identity, direction, authority, and retention ownership are fixed; product, schedule, encryption implementation, replication topology, and numeric retention are open.
+- **Monitoring implementation:** signal boundaries and profile responsibility are fixed; product and storage policy are open.
+- **Optional extensions:** RMM, network overlay, temporary public testing, desktop controls, and exporters require separate review and stay default off/outside core logic.
 
-Open decisions do not block this local documentation bootstrap. They do block claims that the platform is operational or ready for final public release.
+These decisions do not block architecture review. They block claims that the platform is operational or that contribution/publication governance is settled.

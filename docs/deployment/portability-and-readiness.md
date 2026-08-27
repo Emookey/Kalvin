@@ -1,24 +1,31 @@
 # Portability and Readiness
 
-Status: **TARGET reconstruction contract and CURRENT readiness dependency; no installer or validator exists.**
+Status: **CURRENT declarative reconstruction contract and readiness dependency; no installer exists.**
+
+## Reconstruction contract
+
+Inputs are a supported OS contract, an immutable Kalvin revision, exactly one profile, desired repository refs plus resolved commits, host-local non-secret configuration, external secret references, and an approved authoritative backup set when restoring. Outputs are a known deployed state, a secret-free resolved deployment record, and profile-level readiness results.
+
+Missing or ambiguous inputs are validation failures. Reconstruction must not depend on undocumented operator memory.
 
 ## Reconstruction sequence
 
 The intended sequence is:
 
 1. Install a fresh supported Ubuntu Server release.
-2. Verify supported hardware and install pinned platform prerequisites.
-3. Obtain the canonical Kalvin, Kal, and Beepy repositories independently at reviewed revisions.
+2. Validate the host role and install pinned platform prerequisites through later approved tooling.
+3. Obtain Kalvin, Kal, and Beepy independently from operator-selected mirrors and verify immutable commits.
 4. Select and validate an explicit `lab`, `core`, or `storage` profile.
-5. Render machine-local configuration from public templates and external inventory.
-6. Inject secrets through an approved out-of-band mechanism.
-7. Provision service identities and state locations without making code checkouts writable.
-8. Restore only approved authoritative data using application-consistent procedures.
+5. Resolve the desired manifest into exact repository and component versions before mutation.
+6. Render machine-local non-secret configuration and resolve external secret references.
+7. Provision separate service identities and state locations without making release trees writable.
+8. Restore only approved authoritative data using application/database-consistent procedures.
 9. Run migrations supplied by Kal and Beepy in their documented order.
-10. Reconcile or rebuild derived indexes and reproducible caches.
-11. Start selected services according to declared dependencies.
-12. Run liveness, readiness, data-integrity, authorization, contract, backup, and boundary checks.
-13. Record the exact manifest, restore source, results, and rollback reference.
+10. Reconcile or rebuild derived indexes and reproducible caches from authoritative data.
+11. Start selected services according to startup, health, readiness, and optional-integration edges.
+12. Run health, readiness, data-integrity, authorization, contract, backup, and boundary checks.
+13. Enable only profile-approved exposure after readiness.
+14. Write a secret-free resolved deployment record and retain the rollback evidence.
 
 ## Portability exclusions
 
@@ -69,4 +76,4 @@ In addition to the RAG interlock, a future Core proof must show:
 - only profile-approved services exposed;
 - a retained, tested rollback source.
 
-Phase 4B performs none of these operational actions.
+Phase 4C performs none of these operational actions. Its validator checks only repository contracts.

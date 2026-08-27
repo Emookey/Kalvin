@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/compatibility.schema.json",
+  "schema_version": "1.0.0",
+  "contract_status": "reference-architecture",
+  "operational": false,
+  "conflict_policy": "FAIL_CLOSED",
+  "implicit_fallback": false,
+  "entries": []
+}

@@ -1,6 +1,6 @@
 # Platform Overview
 
-Status: **CURRENT bootstrap charter; TARGET architecture; no operational implementation.**
+Status: **CURRENT charter and declarative contracts; TARGET runtime; no operational implementation.**
 
 ## Charter
 
@@ -91,4 +91,12 @@ No extension is implemented in this bootstrap.
 
 Future deployment work should pin application and dependency revisions, render host-local configuration from public templates and external values, apply one service change at a time, preserve rollback sources, and validate data and authorization boundaries in addition to liveness.
 
-The first implementation design phase is Phase 4C. This bootstrap provides only the repository and interfaces from which that work can begin.
+Phase 4C represents that philosophy as non-operational JSON catalogs, profiles, and schemas. The architecture is layered as:
+
+1. shared vocabularies and a component catalog;
+2. one explicit host-role profile;
+3. a desired deployment with human-friendly refs;
+4. immutable repository/component resolution plus host-local configuration and external secret references;
+5. a resolved deployment record describing what actually ran and which gates passed.
+
+Validation rejects unknown vocabulary, undeclared components, unresolved revisions, forbidden exposure, and incomplete readiness. Phase 4D may implement against these interfaces after human review; Phase 4C performs no host mutation.

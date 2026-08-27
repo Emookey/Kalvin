@@ -25,6 +25,24 @@ Status: **TARGET policy; no backup or restore implementation exists.**
 | Secrets and recovery keys | Separate encrypted recovery policy | Inject out of band with least privilege and audit |
 | Temporary runtime state | Excluded | Recreate at service start |
 
+The machine vocabulary calls these policies:
+
+- `REQUIRED` — must be captured through a consistent owner-approved method and included in recovery proof;
+- `REBUILDABLE` — useful as an accelerator but never required to reconstruct truth;
+- `EXCLUDED` — must not be treated or restored as authoritative backup data.
+
+Secrets use a separate protected recovery policy even when a component's state entry is `EXCLUDED` from normal backup payloads.
+
+## Core-to-Storage boundary
+
+Core participates in an outbound, mutually authenticated, narrowly scoped backup protocol to Storage. The backup-client identity can submit only approved backup sets and metadata; it is separate from human, application, platform-administration, and restore identities. Storage needs no Kal/Beepy application-admin credential and gains no Kal agent/tool privilege.
+
+Storage owns repository integrity, retention, expiry, protected copies, and restore-source availability. A restore requires explicit authorization through a separate path and does not turn the Storage host into application compute. Product, transport, encryption implementation, schedules, and retention values remain open for Phase 4D or later review.
+
+## Database consistency contract
+
+An active database directory is never copied arbitrarily. Each application must publish an approved consistency method—such as a database-native dump, application export, coordinated snapshot, or bounded quiesce hook—and the backup record identifies which method and boundary were used. Kalvin may sequence that interface but does not inspect schemas or assume Kal and Beepy share a mechanism.
+
 ## Backup-set contract
 
 A future backup manifest should identify:
@@ -63,4 +81,4 @@ Kalvin must not query application databases to invent this contract. Kal and Bee
 - A container volume name is an implementation detail, not an authority classification.
 - Missing canonical configuration must fail closed rather than silently choosing a legacy production path.
 
-Operational tools, schedules, retention values, encryption mechanisms, and storage implementations are deferred beyond this bootstrap.
+Operational tools, schedules, retention values, encryption mechanisms, and storage implementations are deferred to later phases.
