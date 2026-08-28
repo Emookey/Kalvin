@@ -148,12 +148,10 @@ def parse_findmnt(text: str) -> list[dict[str, Any]]:
     def visit(item: Any) -> None:
         if not isinstance(item, dict):
             raise HostParseError("findmnt entry is malformed")
-        options = item.get("options") if isinstance(item.get("options"), str) else ""
         mounts.append(
             {
                 "target_class": sanitize_mount_target(item.get("target")),
                 "filesystem_type": item.get("fstype"),
-                "read_only": "ro" in options.split(","),
             }
         )
         for child in item.get("children", []):
@@ -161,7 +159,7 @@ def parse_findmnt(text: str) -> list[dict[str, Any]]:
 
     for filesystem in filesystems:
         visit(filesystem)
-    return sorted(mounts, key=lambda item: (item["target_class"], item["filesystem_type"] or "", item["read_only"]))
+    return sorted(mounts, key=lambda item: (item["target_class"], item["filesystem_type"] or ""))
 
 
 def parse_ip_links(text: str) -> list[dict[str, Any]]:

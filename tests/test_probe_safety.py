@@ -114,6 +114,7 @@ class MutationBoundaryTests(unittest.TestCase):
 
     def test_allowlist_contains_only_read_only_commands(self) -> None:
         self.assertEqual({item.executable for item in PROBE_ALLOWLIST.values()}, {"lsblk", "findmnt", "ip", "systemctl"})
+        self.assertNotIn("OPTIONS", {argument for item in PROBE_ALLOWLIST.values() for argument in item.arguments})
         for probe, definition in PROBE_ALLOWLIST.items():
             if definition.executable == "systemctl":
                 self.assertIn(definition.arguments[0], {"is-active", "is-enabled"}, probe)

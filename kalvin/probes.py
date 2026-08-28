@@ -61,7 +61,7 @@ PROBE_ALLOWLIST = MappingProxyType(
             "lsblk",
             ("--json", "--bytes", "--output", "NAME,TYPE,SIZE,FSTYPE,MOUNTPOINTS,ROTA,TRAN"),
         ),
-        ProbeId.FINDMNT: ProbeDefinition("findmnt", ("--json", "--output", "TARGET,FSTYPE,OPTIONS")),
+        ProbeId.FINDMNT: ProbeDefinition("findmnt", ("--json", "--output", "TARGET,FSTYPE")),
         ProbeId.IP_LINK: ProbeDefinition("ip", ("-j", "link", "show")),
         ProbeId.IP_DEFAULT_ROUTE: ProbeDefinition("ip", ("-j", "route", "show", "default")),
         ProbeId.DOCKER_ACTIVE: ProbeDefinition("systemctl", ("is-active", "docker.service")),
