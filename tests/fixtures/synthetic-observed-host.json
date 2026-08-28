@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "KALVIN_OBSERVED_HOST",
+  "operating_system": {"status": "OBSERVED", "family": "ubuntu", "version": "24.04", "related_families": ["debian"], "kernel_release": "6.8.0-synthetic", "architecture": "x86_64"},
+  "cpu": {"status": "OBSERVED", "architecture": "x86_64", "logical_cpu_count": 8, "physical_package_count": 1, "physical_core_count": 4, "model_class": "Synthetic General Purpose CPU"},
+  "memory": {"status": "OBSERVED", "total_bytes": 17179869184, "available_bytes": 12884901888},
+  "block_storage": {"status": "OBSERVED", "devices": [{"name": "vd-synthetic", "type": "disk", "size_bytes": 1099511627776, "filesystem_type": null, "mount_classes": [], "rotational": false, "transport": "virtio"}]},
+  "filesystems": {"status": "OBSERVED", "mounts": [{"target_class": "ROOT", "filesystem_type": "ext4", "read_only": false}, {"target_class": "KALVIN_BACKUP_NAMESPACE", "filesystem_type": "xfs", "read_only": false}]},
+  "systemd": {"status": "OBSERVED", "available": true, "booted_as_service_manager": true},
+  "services": {"docker": {"status": "OBSERVED", "state": "ACTIVE", "enablement": "ENABLED"}, "tailscale": {"status": "OBSERVED", "state": "INACTIVE", "enablement": "DISABLED"}},
+  "executables": {"docker": {"status": "OBSERVED", "present": true}, "findmnt": {"status": "OBSERVED", "present": true}, "git": {"status": "OBSERVED", "present": true}, "ip": {"status": "OBSERVED", "present": true}, "lsblk": {"status": "OBSERVED", "present": true}, "python": {"status": "OBSERVED", "present": true}, "systemctl": {"status": "OBSERVED", "present": true}},
+  "runtimes": {"python": {"status": "OBSERVED", "version": "3.12.0"}},
+  "docker": {"status": "OBSERVED", "cli": {"status": "OBSERVED", "present": true}, "service": {"status": "OBSERVED", "state": "ACTIVE", "enablement": "ENABLED"}, "socket": {"status": "OBSERVED", "present": true, "readable": false}, "daemon_details": "NOT_PROBED"},
+  "network": {"status": "OBSERVED", "links": [{"name": "lo", "classification": "LOOPBACK", "operational_state": "UP"}, {"name": "synthetic0", "classification": "NON_LOOPBACK", "operational_state": "UP"}], "default_route": {"status": "OBSERVED", "present": true, "interfaces": ["synthetic0"]}}
+}

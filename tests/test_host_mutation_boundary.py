@@ -16,8 +16,8 @@ class HostMutationBoundaryTests(unittest.TestCase):
     def sources(self) -> list[Path]:
         return sorted(RUNTIME.glob("*.py"))
 
-    def test_no_process_or_network_client_imports(self) -> None:
-        forbidden = {"subprocess", "socket", "requests", "urllib", "http", "paramiko", "docker", "systemd", "fabric"}
+    def test_process_execution_is_confined_to_phase4e_probe_module(self) -> None:
+        forbidden = {"socket", "requests", "urllib", "http", "paramiko", "docker", "systemd", "fabric"}
         found: list[str] = []
         for path in self.sources():
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -27,6 +27,13 @@ class HostMutationBoundaryTests(unittest.TestCase):
                 if isinstance(node, ast.ImportFrom) and node.module and node.module.split(".")[0] in forbidden:
                     found.append(node.module)
         self.assertEqual(found, [])
+        subprocess_importers = []
+        for path in self.sources():
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import) and any(alias.name == "subprocess" for alias in node.names):
+                    subprocess_importers.append(path.name)
+        self.assertEqual(subprocess_importers, ["probes.py"])
 
     def test_no_runtime_filesystem_write_calls(self) -> None:
         forbidden_methods = {"write_text", "write_bytes", "mkdir", "touch", "unlink", "rename", "replace", "chmod", "chown"}
@@ -42,7 +49,7 @@ class HostMutationBoundaryTests(unittest.TestCase):
         self.assertEqual(found, [])
 
     def test_no_host_mutation_or_network_execution_symbols(self) -> None:
-        forbidden = ("os.system", "shell=True", "create_subprocess", "Popen(", "subprocess.run", "socket.")
+        forbidden = ("os.system", "shell=True", "create_subprocess", "Popen(", "socket.")
         text = "\n".join(path.read_text(encoding="utf-8") for path in self.sources())
         self.assertEqual([item for item in forbidden if item in text], [])
 
