@@ -13,6 +13,8 @@ Kalvin separates five kinds of input and evidence:
 5. **Resolved plans** are deterministic Phase 4D calculations of exact selected versions, dependencies, configuration and secret-reference requirements, state/backup intent, exposure, privilege, and unverified readiness gates. They contain no timestamp or host observation.
 6. **Deployed/observed records** are a future concern. They would report what actually ran, readiness evidence, host role, and deployment time. Phase 4D neither creates nor persists them.
 
+Phase 4E adds an ephemeral **observed host capability** document. It describes sanitized local OS, CPU, memory, storage, mount, service, executable/runtime, Docker, and network capability observations. It is not desired state, is not a resolved deployment plan, and is not evidence that an application ran. The preflight result compares it with the resolved profile without changing either input.
+
 Catalogs and profiles are committed public contracts. Host-local configuration, provider bindings, secret values, authoritative backup payloads, and future deployed records are host state outside Git. Phase 4D plans go from input files to memory to stdout and are not persisted by the engine.
 
 ## Desired versus resolved state

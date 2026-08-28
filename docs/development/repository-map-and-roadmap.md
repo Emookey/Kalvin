@@ -1,6 +1,6 @@
 # Repository Map and Roadmap
 
-Status: **CURRENT Phase 4D read-only engine and PLANNED later implementation sequence.**
+Status: **CURRENT Phase 4E read-only host preflight and PLANNED later implementation sequence.**
 
 ## Current repository map
 
@@ -22,6 +22,7 @@ docs/
 manifests/
   compatibility.json            # zero implicit aliases; future entry contract
   components.json               # component/dependency/state catalog
+  host-requirements.json        # evidence-backed/unspecified profile host capabilities
   readiness-gates.json          # health/readiness vocabulary and ownership
   repositories.json             # independent repository and pinning policy
   vocabularies.json              # state, backup, exposure, privilege vocabulary
@@ -29,6 +30,9 @@ schemas/
   compatibility.schema.json
   component-catalog.schema.json
   deployment-profile.schema.json
+  host-preflight.schema.json
+  host-requirements.schema.json
+  observed-host.schema.json
   desired-deployment.schema.json
   readiness-gates.schema.json
   repository-catalog.schema.json
@@ -44,14 +48,18 @@ kalvin/
   lockfile.py                    # immutable lock validation
   resolver.py                    # in-memory resolved-plan calculation
   output.py                      # deterministic JSON and operator text
+  probes.py                      # exact local read-only command allowlist
+  host_parsers.py                # pure parsers and identity sanitizers
+  host_inspector.py              # ephemeral local observed-host assembly
+  preflight.py                   # pure resolved-versus-observed comparison
 tests/
   README.md
-  fixtures/                      # explicitly synthetic lock examples
+  fixtures/                      # explicitly synthetic locks and observed host
   test_*.py                      # engine, negative, CLI, and safety tests
   validate_architecture.py       # retained architecture compatibility checks
 ```
 
-Every current directory contains a useful artifact. `deploy/`, `manifests/`, and `schemas/` are runtime input to the bounded read-only engine. The repository contains no application source, deployment executor, live template, secret, runtime state, or backup payload. Kalvin is licensed `AGPL-3.0-or-later`.
+Every current directory contains a useful artifact. `deploy/`, `manifests/`, and `schemas/` are runtime input to the bounded read-only engine. The repository contains no application source, deployment executor, captured host inventory, live template, secret, runtime state, or backup payload. Kalvin is licensed `AGPL-3.0-or-later`.
 
 ## Directory responsibilities
 
@@ -61,8 +69,8 @@ Every current directory contains a useful artifact. `deploy/`, `manifests/`, and
 | `manifests/` | Shared catalogs and controlled vocabulary independent of a runtime engine |
 | `schemas/` | Syntax contracts for current catalogs/profiles and future desired/resolved deployment records |
 | `docs/` | Human-readable architecture, ownership, lifecycle, migration, and operations policy |
-| `kalvin/` | First executable tooling: declaration validation and deterministic resolution only |
-| `tests/` | Isolated positive, negative, CLI, determinism, publication, and host-mutation-boundary validation |
+| `kalvin/` | Declaration validation, deterministic resolution, bounded local inspection, and pure preflight comparison |
+| `tests/` | Isolated positive, negative, CLI, parser, determinism, privacy, and mutation-boundary validation |
 
 Create a future top-level directory only with its first reviewed artifact. There is no `scripts/`, `deploy/compose/`, `deploy/templates/`, or application vendor directory today.
 
@@ -72,18 +80,23 @@ Create a future top-level directory only with its first reviewed artifact. There
 
 Phase 4D implements offline declaration validation and desired-to-resolved planning. It accepts secret-free immutable locks, emits stable text/JSON plans, and preserves external readiness gates. It deliberately excludes host preflight and every mutation mechanism; it does not preselect Compose or native services.
 
+### Phase 4E — local host observation and preflight (current)
+
+Phase 4E observes bounded, sanitized capability data on only the executing host and compares it with resolved profile requirements. Its command allowlist is fixed and read-only. It neither persists inventory nor changes the host. CPU/RAM/storage minimums remain explicitly unspecified pending evidence and human decisions.
+
 ### Later implementation gates
 
-1. read-only host capability and compatibility preflight;
-2. reviewed prerequisite/bootstrap implementation;
-3. service orchestration for one explicitly selected profile;
-4. external configuration and secret-provider adapters;
-5. application-consistent backup and restore transport;
-6. health, readiness, boundary, and drift reporting;
-7. compatibility and host-migration tooling;
-8. Core clean-install and reconstruction proof;
-9. Storage-role implementation, retention, and recovery proof;
-10. reviewed GoodWill superseded notice and eventual archival.
+1. human live review of the local inspector and evidence-backed host thresholds;
+2. optional dedicated low-privilege inspector/persistence architecture;
+3. reviewed prerequisite/bootstrap implementation;
+4. service orchestration for one explicitly selected profile;
+5. external configuration and secret-provider adapters;
+6. application-consistent backup and restore transport;
+7. health, readiness, boundary, and drift reporting;
+8. compatibility and host-migration tooling;
+9. Core clean-install and reconstruction proof;
+10. Storage-role implementation, retention, and recovery proof;
+11. reviewed GoodWill superseded notice and eventual archival.
 
 Do not combine these into one privileged installer or treat successful service startup as proof of recovery or authorization.
 

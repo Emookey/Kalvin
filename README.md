@@ -4,7 +4,7 @@ Kalvin is the platform, infrastructure, and orchestration layer for independentl
 
 ## Repository status
 
-**CURRENT — declarative architecture plus read-only resolution engine.** This repository contains the Phase 4B charter, Phase 4C reference profiles and catalogs, and the Phase 4D executable validator/resolver. Phase 4D reads declarations and a secret-free immutable lock, then writes a deterministic resolved plan to stdout. It does not inspect a host or deploy anything. There are no Compose stacks, systemd units, installers, network rules, backup/restore executables, or host-migration tools, and the repository is not production-ready.
+**CURRENT — declarative architecture plus read-only resolution and local host preflight.** This repository contains the Phase 4B charter, Phase 4C contracts, the Phase 4D validator/resolver, and the Phase 4E bounded local inspector/preflight engine. Phase 4E observes sanitized capability data only through fixed local sources and an explicit command allowlist. It does not deploy, repair, elevate, contact a network, or persist inventory. There are no Compose stacks, systemd units, installers, network rules, backup/restore executables, or host-migration tools, and the repository is not production-ready.
 
 **TARGET — portable platform.** A later implementation phase may build narrowly scoped tooling against these reviewed contracts. Documentation continues to distinguish designed behavior from implemented and validated behavior.
 
@@ -65,9 +65,11 @@ python3 -m kalvin validate
 python3 -m kalvin resolve --profile lab --lock tests/fixtures/synthetic-lab.lock.json --format text
 python3 -m kalvin resolve --profile core --lock tests/fixtures/synthetic-core.lock.json --format json
 python3 -m kalvin resolve --profile storage --lock tests/fixtures/synthetic-storage.lock.json --format text
+python3 -m kalvin host inspect --format text
+python3 -m kalvin host preflight --profile core --lock tests/fixtures/synthetic-core.lock.json --format text
 ```
 
-The examples are explicitly synthetic and are not production locks. The CLI has no apply, deploy, install, service-control, host-detection, network, or arbitrary file-output command. A successful resolution means the declarations and immutable inputs form a structurally resolved plan; it does not mean software ran or readiness evidence passed.
+The tracked examples are explicitly synthetic and are not production locks or captured host inventories. Host commands observe only the local machine and write only stdout/stderr. The CLI has no apply, repair, deploy, install, service-control, remote-inspection, network-client, or arbitrary file-output command. A successful host preflight means declared host requirements were compared with available sanitized observations; it does not mean software ran or application readiness passed.
 
 ## Portability objective
 
@@ -88,6 +90,7 @@ Canonical Kal currently keeps RAG indexing status in process-local memory. Durab
 - [Deployment profiles](docs/deployment/profiles.md)
 - [Declarative deployment model](docs/deployment/declarative-model.md)
 - [Validation and resolution engine](docs/deployment/validation-and-resolution-engine.md)
+- [Read-only host inspection and preflight](docs/deployment/host-inspection-and-preflight.md)
 - [Component model](docs/deployment/component-model.md)
 - [Repository and version pinning](docs/deployment/repository-pinning.md)
 - [Configuration and secret references](docs/deployment/configuration-and-secrets.md)
@@ -101,9 +104,9 @@ Canonical Kal currently keeps RAG indexing status in process-local memory. Durab
 
 ## Architecture contracts and bounded implementation
 
-Reference profiles live under `deploy/profiles/`, shared catalogs under `manifests/`, syntax contracts under `schemas/`, the read-only engine under `kalvin/`, and isolated validation under `tests/`. The engine calculates intent only.
+Reference profiles live under `deploy/profiles/`, shared catalogs and host requirements under `manifests/`, syntax contracts under `schemas/`, read-only engine modules under `kalvin/`, and isolated validation under `tests/`. The engine calculates intent and observes bounded local capabilities only.
 
-**PLANNED — absent today.** Host preflight, operational orchestration, persistence, and bounded host tooling remain later, separately reviewed phases. Phase 4D contains no apply/deploy path.
+**PLANNED — absent today.** Inventory persistence, remote inspection, operational orchestration, and bounded deployment tooling remain later, separately reviewed phases. Phase 4E contains no apply/deploy/repair path.
 
 ## License
 

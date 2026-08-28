@@ -9,6 +9,6 @@ python3 tests/validate_architecture.py
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
-The retained architecture validator uses only the Python standard library. The Phase 4D engine declares `jsonschema` for full Draft 2020-12 validation. The unit suite covers positive Lab/Core/Storage resolution, immutable locks, stable output, state/backup/configuration/secret handling, external readiness, negative policy cases, CLI exits, and the tested host-mutation boundary.
+The retained architecture validator uses only the Python standard library. The engine declares `jsonschema` for full Draft 2020-12 validation. The unit suite covers Phase 4D resolution plus synthetic Phase 4E OS/CPU/memory/storage/mount/service/executable/Docker/network parsing, observation status distinctions, Lab/Core/Storage preflight, deterministic output, privacy sanitization, probe failure handling, CLI no-write behavior, and the explicit mutation boundary.
 
-Tests use synthetic locks and temporary test directories only. They do not render configuration, resolve secret values, acquire repositories, contact services, inspect runtime state, or change a host. Passing establishes the tested declarative boundary, not operational or production readiness.
+Tests use synthetic locks, a synthetic observed-host document, mocked probe execution, and controlled temporary directories only. Ordinary tests do not run full live inspection, render configuration, resolve secret values, acquire repositories, contact services, or change a host. Passing establishes the tested read-only boundary, not operational or production readiness.

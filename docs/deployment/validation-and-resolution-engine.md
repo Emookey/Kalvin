@@ -76,4 +76,4 @@ Phase 4D can verify declarative contract, lock, exposure, and identity structure
 
 ## Later phases
 
-Host capability inspection belongs to a later read-only preflight phase. Controlled persistence, configuration rendering, repository acquisition, orchestration, backup/restore transport, health probes, and deployment belong to separately authorized future phases. None is implied by a Phase 4D plan.
+Local host capability inspection now belongs to the separate Phase 4E read-only boundary documented in [Read-Only Host Inspection and Preflight](host-inspection-and-preflight.md). Controlled persistence, remote inspection, configuration rendering, repository acquisition, orchestration, backup/restore transport, application health probes, and deployment remain separately authorized future phases. None is implied by a Phase 4D plan or Phase 4E host comparison.
