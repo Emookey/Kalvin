@@ -51,7 +51,7 @@ systemctl is-active tailscaled.service
 systemctl is-enabled tailscaled.service
 ```
 
-Commands run as absolute executables resolved through the fixed trusted path, with `shell=False`, stdin disconnected, a three-second timeout, bounded accepted stdout/stderr sizes, C locale, a three-variable environment, and explicit parsers. Failures become `UNAVAILABLE`, `INSUFFICIENT_PERMISSION`, or `UNKNOWN`; the runner never elevates or falls back to another command.
+Commands run as absolute executables resolved through the fixed trusted path, with `shell=False`, stdin disconnected, a three-second timeout, C locale, a three-variable environment, and explicit parsers. Dedicated pipe readers drain command output while retaining at most the configured stdout or stderr limit plus one byte; an over-limit result is discarded as `OUTPUT_LIMIT_EXCEEDED`. Other failures become `UNAVAILABLE`, `INSUFFICIENT_PERMISSION`, or `UNKNOWN`; the runner never elevates or falls back to another command.
 
 No Docker CLI/daemon command, Tailscale CLI command, package manager, network client, SSH client, service mutation, mount/storage utility, privilege escalation, or generic command runner exists.
 

@@ -32,6 +32,15 @@ def synthetic_observed() -> dict:
 
 
 class ProbeRunnerTests(unittest.TestCase):
+    @staticmethod
+    def completed(stdout: bytes = b"", stderr: bytes = b"", returncode: int = 0) -> object:
+        def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[bytes]:
+            os.write(kwargs["stdout"], stdout)  # type: ignore[arg-type]
+            os.write(kwargs["stderr"], stderr)  # type: ignore[arg-type]
+            return subprocess.CompletedProcess(command, returncode)
+
+        return run
+
     def test_arbitrary_command_cannot_be_requested(self) -> None:
         with self.assertRaisesRegex(UserInputError, "arbitrary command execution"):
             LocalProbeRunner().run("synthetic-command")  # type: ignore[arg-type]
@@ -44,7 +53,7 @@ class ProbeRunnerTests(unittest.TestCase):
     @patch("kalvin.probes.find_trusted_executable", return_value="/usr/bin/lsblk")
     @patch("kalvin.probes.subprocess.run")
     def test_runner_uses_exact_argv_timeout_environment_and_no_shell(self, run_mock: object, _which: object) -> None:
-        run_mock.return_value = subprocess.CompletedProcess([], 0, b'{"blockdevices": []}', b"")  # type: ignore[attr-defined]
+        run_mock.side_effect = self.completed(b'{"blockdevices": []}')  # type: ignore[attr-defined]
         LocalProbeRunner().run(ProbeId.LSBLK)
         args, kwargs = run_mock.call_args  # type: ignore[attr-defined]
         self.assertEqual(args[0], ["/usr/bin/lsblk", "--json", "--bytes", "--output", "NAME,TYPE,SIZE,FSTYPE,MOUNTPOINTS,ROTA,TRAN"])
@@ -64,13 +73,13 @@ class ProbeRunnerTests(unittest.TestCase):
     @patch("kalvin.probes.find_trusted_executable", return_value="/usr/bin/lsblk")
     @patch("kalvin.probes.subprocess.run")
     def test_permission_denied_handled_without_escalation(self, run_mock: object, _which: object) -> None:
-        run_mock.return_value = subprocess.CompletedProcess([], 1, b"", b"permission denied")  # type: ignore[attr-defined]
+        run_mock.side_effect = self.completed(stderr=b"permission denied", returncode=1)  # type: ignore[attr-defined]
         self.assertEqual(LocalProbeRunner().run(ProbeId.LSBLK).status, ProbeStatus.PERMISSION_DENIED)
 
     @patch("kalvin.probes.find_trusted_executable", return_value="/usr/bin/lsblk")
     @patch("kalvin.probes.subprocess.run")
     def test_output_limit_is_enforced(self, run_mock: object, _which: object) -> None:
-        run_mock.return_value = subprocess.CompletedProcess([], 0, b"x" * 262145, b"")  # type: ignore[attr-defined]
+        run_mock.side_effect = self.completed(b"x" * 262145)  # type: ignore[attr-defined]
         self.assertEqual(LocalProbeRunner().run(ProbeId.LSBLK).status, ProbeStatus.OUTPUT_LIMIT_EXCEEDED)
 
 

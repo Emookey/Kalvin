@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import threading
 from dataclasses import dataclass
 from enum import Enum
 from types import MappingProxyType
@@ -55,6 +56,38 @@ class ProbeResult:
     returncode: int | None = None
 
 
+@dataclass
+class _BoundedCapture:
+    """Retain at most limit + 1 bytes while draining a child-process pipe."""
+
+    limit: int
+    data: bytearray
+    read_failed: bool = False
+
+
+def _drain_pipe(read_fd: int, capture: _BoundedCapture) -> None:
+    try:
+        while True:
+            chunk = os.read(read_fd, 65_536)
+            if not chunk:
+                break
+            remaining = capture.limit + 1 - len(capture.data)
+            if remaining > 0:
+                capture.data.extend(chunk[:remaining])
+    except OSError:
+        capture.read_failed = True
+    finally:
+        os.close(read_fd)
+
+
+def _capture_pipe(limit: int) -> tuple[int, _BoundedCapture, threading.Thread]:
+    read_fd, write_fd = os.pipe()
+    capture = _BoundedCapture(limit=limit, data=bytearray())
+    reader = threading.Thread(target=_drain_pipe, args=(read_fd, capture), daemon=True)
+    reader.start()
+    return write_fd, capture, reader
+
+
 PROBE_ALLOWLIST = MappingProxyType(
     {
         ProbeId.LSBLK: ProbeDefinition(
@@ -88,12 +121,16 @@ class LocalProbeRunner:
         if executable is None:
             return ProbeResult(probe_id, ProbeStatus.COMMAND_MISSING)
         command = [executable, *definition.arguments]
+        stdout_fd, stdout_capture, stdout_reader = _capture_pipe(definition.maximum_stdout_bytes)
+        stderr_fd, stderr_capture, stderr_reader = _capture_pipe(definition.maximum_stderr_bytes)
+        failure_status: ProbeStatus | None = None
+        completed: subprocess.CompletedProcess[bytes] | None = None
         try:
             completed = subprocess.run(
                 command,
                 stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=stdout_fd,
+                stderr=stderr_fd,
                 shell=False,
                 check=False,
                 timeout=definition.timeout_seconds,
@@ -101,19 +138,29 @@ class LocalProbeRunner:
                 env=dict(MINIMAL_ENVIRONMENT),
             )
         except subprocess.TimeoutExpired:
-            return ProbeResult(probe_id, ProbeStatus.TIMEOUT)
+            failure_status = ProbeStatus.TIMEOUT
         except PermissionError:
-            return ProbeResult(probe_id, ProbeStatus.PERMISSION_DENIED)
+            failure_status = ProbeStatus.PERMISSION_DENIED
         except OSError:
+            failure_status = ProbeStatus.FAILED
+        finally:
+            os.close(stdout_fd)
+            os.close(stderr_fd)
+            stdout_reader.join()
+            stderr_reader.join()
+
+        if failure_status is not None:
+            return ProbeResult(probe_id, failure_status)
+        if completed is None or stdout_capture.read_failed or stderr_capture.read_failed:
             return ProbeResult(probe_id, ProbeStatus.FAILED)
 
         if (
-            len(completed.stdout) > definition.maximum_stdout_bytes
-            or len(completed.stderr) > definition.maximum_stderr_bytes
+            len(stdout_capture.data) > definition.maximum_stdout_bytes
+            or len(stderr_capture.data) > definition.maximum_stderr_bytes
         ):
             return ProbeResult(probe_id, ProbeStatus.OUTPUT_LIMIT_EXCEEDED, returncode=completed.returncode)
-        stdout = completed.stdout.decode("utf-8", errors="replace")
-        stderr = completed.stderr.decode("utf-8", errors="replace")
+        stdout = stdout_capture.data.decode("utf-8", errors="replace")
+        stderr = stderr_capture.data.decode("utf-8", errors="replace")
         lowered = stderr.lower()
         if completed.returncode == 0:
             status = ProbeStatus.SUCCESS
