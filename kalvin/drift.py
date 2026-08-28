@@ -97,10 +97,22 @@ def _remediations(policy: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {item["id"]: item for item in policy["remediations"]}
 
 
-def _guidance(remediation: dict[str, Any], profile: str, *, not_applicable: bool) -> str:
+def _guidance(
+    remediation: dict[str, Any],
+    profile: str,
+    *,
+    not_applicable: bool,
+    selected_components: set[str] | None = None,
+) -> str:
     if not_applicable:
         return NOT_APPLICABLE_GUIDANCE
-    return remediation.get("guidance_by_profile", {}).get(profile, remediation["guidance"])
+    guidance = remediation.get("guidance_by_profile", {}).get(profile, remediation["guidance"])
+    if selected_components is not None:
+        component_guidance = remediation.get("guidance_by_component", {})
+        additions = [component_guidance[component] for component in sorted(selected_components & component_guidance.keys())]
+        if additions:
+            guidance = " ".join([guidance, *additions])
+    return guidance
 
 
 def requirement_by_id(policy: dict[str, Any], requirement_id: str) -> dict[str, Any]:
@@ -233,7 +245,12 @@ def _evaluate_requirement(
         "explanation": explanation,
         "remediation": {
             "id": remediation["id"],
-            "guidance": _guidance(remediation, profile, not_applicable=result == "NOT_APPLICABLE"),
+            "guidance": _guidance(
+                remediation,
+                profile,
+                not_applicable=result == "NOT_APPLICABLE",
+                selected_components=selected_components,
+            ),
             "action": "NONE",
         },
         "action_performed": "NONE",

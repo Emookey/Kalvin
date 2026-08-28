@@ -272,5 +272,105 @@ class GuidanceRegressionTests(unittest.TestCase):
         self.assertIn('"action_performed":"NONE"', json_rendered)
 
 
+class OperatorGuidanceTests(unittest.TestCase):
+    def setUp(self) -> None:
+        architecture, findings = load_architecture(ROOT)
+        self.assertEqual(findings, [])
+        self.policy = architecture.catalogs["host-requirements"]
+        self.observed = json.loads((FIXTURES / "synthetic-observed-host.json").read_text(encoding="utf-8"))
+
+    def plan(self, profile: str, *, enabled_optional: tuple[str, ...] = ()) -> dict:
+        return resolve_plan(
+            profile,
+            FIXTURES / f"synthetic-{profile}.lock.json",
+            root=ROOT,
+            enabled_optional=enabled_optional,
+        )
+
+    def report(
+        self,
+        profile: str,
+        *,
+        observed: dict | None = None,
+        enabled_optional: tuple[str, ...] = (),
+    ) -> dict:
+        return evaluate_host_drift(self.plan(profile, enabled_optional=enabled_optional), observed or self.observed, self.policy)
+
+    @staticmethod
+    def finding(report: dict, requirement_id: str) -> dict:
+        return next(item for item in report["findings"] if item["id"] == requirement_id)
+
+    @staticmethod
+    def rendered_finding(report: dict, requirement_id: str) -> str:
+        marker = f"  - {requirement_id}:"
+        rendered = drift_text(report).split(marker, 1)[1]
+        return rendered.split("\n  - ", 1)[0].split("\n\n", 1)[0]
+
+    def test_satisfied_finding_uses_informational_guidance_label(self) -> None:
+        block = self.rendered_finding(self.report("core"), "runtime.python-version")
+        self.assertIn("    Guidance:", block)
+
+    def test_satisfied_finding_does_not_suggest_remediation(self) -> None:
+        block = self.rendered_finding(self.report("core"), "runtime.python-version")
+        self.assertNotIn("Suggested remediation:", block)
+
+    def test_not_applicable_finding_uses_informational_guidance_label(self) -> None:
+        block = self.rendered_finding(self.report("storage"), "model-runtime.compute-capacity")
+        self.assertIn("    Guidance: No remediation is required", block)
+        self.assertNotIn("Suggested remediation:", block)
+
+    def test_decision_pending_finding_uses_decision_guidance_label(self) -> None:
+        block = self.rendered_finding(self.report("storage"), "host.minimum-memory")
+        self.assertIn("    Decision guidance:", block)
+
+    def test_unsatisfied_finding_keeps_remediation_label(self) -> None:
+        observed = copy.deepcopy(self.observed)
+        observed["executables"]["git"]["present"] = False
+        block = self.rendered_finding(self.report("core", observed=observed), "capability.git")
+        self.assertIn("    Suggested remediation:", block)
+
+    def test_unknown_finding_uses_investigation_guidance_label(self) -> None:
+        observed = copy.deepcopy(self.observed)
+        observed["executables"]["git"].update(status="UNAVAILABLE", present=None)
+        block = self.rendered_finding(self.report("core", observed=observed), "capability.git")
+        self.assertIn("    Investigation guidance:", block)
+
+    def test_json_remediation_contract_is_unchanged(self) -> None:
+        report = self.report("core")
+        schema = json.loads((ROOT / "schemas/host-drift.schema.json").read_text(encoding="utf-8"))
+        Draft202012Validator(schema).validate(report)
+        self.assertTrue(all(item["remediation"]["action"] == "NONE" for item in report["findings"]))
+        self.assertTrue(all(item["action_performed"] == "NONE" for item in report["findings"]))
+
+    def test_lab_without_model_runtime_has_model_free_memory_guidance(self) -> None:
+        finding = self.finding(self.report("lab"), "host.minimum-memory")
+        self.assertNotIn("model", finding["remediation"]["guidance"].lower())
+
+    def test_lab_with_model_runtime_has_model_aware_memory_guidance(self) -> None:
+        finding = self.finding(
+            self.report("lab", enabled_optional=("model-runtime",)),
+            "host.minimum-memory",
+        )
+        self.assertIn("selected model-runtime", finding["remediation"]["guidance"])
+        self.assertIn("model workload", finding["remediation"]["guidance"])
+
+    def test_storage_memory_guidance_remains_model_free(self) -> None:
+        guidance = self.finding(self.report("storage"), "host.minimum-memory")["remediation"]["guidance"]
+        self.assertIn("Storage-role services", guidance)
+        self.assertIn("backup and retention workload", guidance)
+        self.assertNotIn("model", guidance.lower())
+
+    def test_core_memory_guidance_reflects_selected_model_runtime(self) -> None:
+        guidance = self.finding(self.report("core"), "host.minimum-memory")["remediation"]["guidance"]
+        self.assertIn("selected model-runtime", guidance)
+        self.assertIn("model workload", guidance)
+
+    def test_core_memory_guidance_omits_unselected_model_runtime(self) -> None:
+        plan = copy.deepcopy(self.plan("core"))
+        plan["components"] = [item for item in plan["components"] if item["id"] != "model-runtime"]
+        guidance = self.finding(evaluate_host_drift(plan, self.observed, self.policy), "host.minimum-memory")["remediation"]["guidance"]
+        self.assertNotIn("model", guidance.lower())
+
+
 if __name__ == "__main__":
     unittest.main()

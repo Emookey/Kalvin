@@ -29,9 +29,12 @@
       "id": "approve-memory-sizing-method",
       "guidance": "Choose a memory sizing method derived from the selected profile and component workload before approving an enforceable threshold.",
       "guidance_by_profile": {
-        "lab": "Choose a memory sizing method derived from selected experimental components; include model workload only when model-runtime is selected.",
-        "core": "Choose a memory sizing method derived from Kal, Beepy, model-runtime when selected, and other selected Core components.",
+        "lab": "Choose a memory sizing method derived from the selected Lab components and experimental workload before approving an enforceable threshold.",
+        "core": "Choose a memory sizing method derived from selected Core components and their application, monitoring, and backup workloads before approving an enforceable threshold.",
         "storage": "Choose a memory sizing method derived from selected Storage-role services, backup and retention workload, and filesystem and storage tooling."
+      },
+      "guidance_by_component": {
+        "model-runtime": "The selected model-runtime makes model workload a memory-sizing driver."
       },
       "action": "NONE"
     },

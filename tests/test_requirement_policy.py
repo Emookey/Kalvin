@@ -80,6 +80,16 @@ class RequirementPolicySafetyTests(unittest.TestCase):
         remediation["guidance_by_profile"]["storage"] = "systemctl restart synthetic.service"
         self.assertIn("executable-remediation", self.codes())
 
+    def test_executable_shell_in_component_guidance_rejected(self) -> None:
+        remediation = next(item for item in self.policy["remediations"] if "guidance_by_component" in item)
+        remediation["guidance_by_component"]["model-runtime"] = "systemctl restart synthetic.service"
+        self.assertIn("executable-remediation", self.codes())
+
+    def test_unknown_component_guidance_scope_rejected(self) -> None:
+        remediation = next(item for item in self.policy["remediations"] if "guidance_by_component" in item)
+        remediation["guidance_by_component"]["synthetic-unknown"] = "Synthetic guidance only."
+        self.assertIn("unknown-guidance-component", self.codes())
+
     def test_automatic_fix_action_rejected(self) -> None:
         self.policy["remediations"][0]["action"] = "FIX"
         self.assertIn("schema-validation", self.codes())

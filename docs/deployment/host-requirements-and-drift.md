@@ -84,7 +84,7 @@ Host compliance is `SATISFIED`, `UNSATISFIED`, or `UNKNOWN`. Drift status separa
 
 ## Remediation boundary
 
-Every remediation has an ID, plain-language guidance, and literal action `NONE`. Guidance is selected for the active profile where a declarative override exists. A `NOT_APPLICABLE` result always explains that no remediation is required for the selected profile/component set. Policy validation rejects shell-like executable guidance, including profile overrides, and any action other than `NONE`. The report repeats `DRIFT REPORT ONLY — NO CHANGES PERFORMED`.
+Every remediation has an ID, plain-language guidance, and literal action `NONE`. Guidance is selected for the active profile where a declarative override exists and may append context only for components in the resolved set. A `NOT_APPLICABLE` result always explains that no remediation is required for the selected profile/component set. Human drift output labels satisfied/not-applicable policy context as `Guidance`, unresolved choices as `Decision guidance`, unavailable evidence as `Investigation guidance`, and only unsatisfied findings as `Suggested remediation`. Policy validation rejects shell-like executable guidance, including profile/component variants, and any action other than `NONE`. The report repeats `DRIFT REPORT ONLY — NO CHANGES PERFORMED`.
 
 Guidance is not authorization. It does not install packages, change services, alter containers, mount storage, configure networking, resolve secrets, or modify a host. Controlled remediation is a future, separately authorized design.
 

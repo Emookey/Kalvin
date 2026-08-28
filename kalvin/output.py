@@ -227,7 +227,7 @@ def requirements_text(document: dict[str, Any]) -> str:
                 f"  Rationale: {item['reason']}",
                 f"  Lifecycle: {item['lifecycle']}",
                 f"  Blocks host compliance now: {'YES' if item['currently_blocks_host_compliance'] else 'NO'}",
-                f"  Remediation guidance: {item['remediation']['guidance']}",
+                f"  Policy guidance: {item['remediation']['guidance']}",
                 "  Action performed: NONE",
             ]
         )
@@ -268,7 +268,7 @@ def drift_text(report: dict[str, Any]) -> str:
                     f"    Expected: {_display(item['expected'])}",
                     f"    Observed: {item['observed_status']} / {_display(item['observed'])}",
                     f"    Evidence: {item['evidence_class']}",
-                    f"    Suggested remediation: {item['remediation']['guidance']}",
+                    f"    {_drift_guidance_label(item['result'])}: {item['remediation']['guidance']}",
                     "    Action performed: NONE",
                 ]
             )
@@ -289,3 +289,13 @@ def drift_text(report: dict[str, Any]) -> str:
         ]
     )
     return "\n".join(lines) + "\n"
+
+
+def _drift_guidance_label(result: str) -> str:
+    return {
+        "SATISFIED": "Guidance",
+        "NOT_APPLICABLE": "Guidance",
+        "DECISION_PENDING": "Decision guidance",
+        "UNKNOWN": "Investigation guidance",
+        "UNSATISFIED": "Suggested remediation",
+    }[result]

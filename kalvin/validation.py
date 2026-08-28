@@ -425,9 +425,16 @@ def _validate_host_requirements(architecture: Architecture, result: ValidationRe
     for remediation in remediations:
         if remediation.get("action") != "NONE":
             result.add("POLICY ERROR", "automatic-remediation", remediation.get("id", "unknown"), "remediation action must remain NONE")
-        guidance_values = [remediation.get("guidance", ""), *remediation.get("guidance_by_profile", {}).values()]
+        guidance_values = [
+            remediation.get("guidance", ""),
+            *remediation.get("guidance_by_profile", {}).values(),
+            *remediation.get("guidance_by_component", {}).values(),
+        ]
         if any(pattern.search(guidance) for guidance in guidance_values for pattern in shell_patterns):
             result.add("POLICY ERROR", "executable-remediation", remediation.get("id", "unknown"), "remediation guidance must not contain executable shell")
+        for component_id in remediation.get("guidance_by_component", {}):
+            if component_id not in component_ids:
+                result.add("CROSS-REFERENCE ERROR", "unknown-guidance-component", remediation.get("id", "unknown"), f"unknown component guidance scope {component_id!r}")
 
     severity_policy = document["severity_policy"]
     if set(severity_policy.values()) - SEVERITIES:
