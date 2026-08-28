@@ -4,7 +4,7 @@ Kalvin is the platform, infrastructure, and orchestration layer for independentl
 
 ## Repository status
 
-**CURRENT — declarative architecture plus read-only resolution and local host preflight.** This repository contains the Phase 4B charter, Phase 4C contracts, the Phase 4D validator/resolver, and the Phase 4E bounded local inspector/preflight engine. Phase 4E observes sanitized capability data only through fixed local sources and an explicit command allowlist. It does not deploy, repair, elevate, contact a network, or persist inventory. There are no Compose stacks, systemd units, installers, network rules, backup/restore executables, or host-migration tools, and the repository is not production-ready.
+**CURRENT — declarative architecture plus read-only resolution, host observation, requirements, and drift reporting.** This repository contains the Phase 4B charter, Phase 4C contracts, Phase 4D validator/resolver, Phase 4E bounded local inspector/preflight, and Phase 4F evidence-backed host requirement/drift policy. The engine can explain noncompliance and guidance, but it cannot remediate, deploy, repair, elevate, contact a network, or persist inventory. There are no Compose stacks, systemd units, installers, network rules, backup/restore executables, or host-migration tools, and the repository is not production-ready.
 
 **TARGET — portable platform.** A later implementation phase may build narrowly scoped tooling against these reviewed contracts. Documentation continues to distinguish designed behavior from implemented and validated behavior.
 
@@ -56,7 +56,7 @@ Kalvin may deploy and configure a pinned Beepy release. Business application log
 
 Profiles are **CURRENT architecture contracts**, explicit, and composable. The resolver reads them as deployment intent, but they remain declarations rather than executable deployment files.
 
-## Read-only validation and resolution
+## Read-only tooling
 
 From the repository root:
 
@@ -67,9 +67,11 @@ python3 -m kalvin resolve --profile core --lock tests/fixtures/synthetic-core.lo
 python3 -m kalvin resolve --profile storage --lock tests/fixtures/synthetic-storage.lock.json --format text
 python3 -m kalvin host inspect --format text
 python3 -m kalvin host preflight --profile core --lock tests/fixtures/synthetic-core.lock.json --format text
+python3 -m kalvin host requirements --profile core --format text
+python3 -m kalvin host drift --profile core --lock tests/fixtures/synthetic-core.lock.json --format text
 ```
 
-The tracked examples are explicitly synthetic and are not production locks or captured host inventories. Host commands observe only the local machine and write only stdout/stderr. The CLI has no apply, repair, deploy, install, service-control, remote-inspection, network-client, or arbitrary file-output command. A successful host preflight means declared host requirements were compared with available sanitized observations; it does not mean software ran or application readiness passed.
+The tracked examples are explicitly synthetic and are not production locks or captured host inventories. `host requirements` observes nothing. `host inspect`, `host preflight`, and `host drift` observe only the local machine and write only stdout/stderr. The CLI has no apply, repair, deploy, install, service-control, remote-inspection, network-client, or arbitrary file-output command. Host compliance does not mean software ran or application readiness passed.
 
 ## Portability objective
 
@@ -91,6 +93,8 @@ Canonical Kal currently keeps RAG indexing status in process-local memory. Durab
 - [Declarative deployment model](docs/deployment/declarative-model.md)
 - [Validation and resolution engine](docs/deployment/validation-and-resolution-engine.md)
 - [Read-only host inspection and preflight](docs/deployment/host-inspection-and-preflight.md)
+- [Host requirements and drift policy](docs/deployment/host-requirements-and-drift.md)
+- [Hardware requirement decisions](docs/deployment/hardware-requirement-decisions.md)
 - [Component model](docs/deployment/component-model.md)
 - [Repository and version pinning](docs/deployment/repository-pinning.md)
 - [Configuration and secret references](docs/deployment/configuration-and-secrets.md)
@@ -104,9 +108,9 @@ Canonical Kal currently keeps RAG indexing status in process-local memory. Durab
 
 ## Architecture contracts and bounded implementation
 
-Reference profiles live under `deploy/profiles/`, shared catalogs and host requirements under `manifests/`, syntax contracts under `schemas/`, read-only engine modules under `kalvin/`, and isolated validation under `tests/`. The engine calculates intent and observes bounded local capabilities only.
+Reference profiles live under `deploy/profiles/`, shared catalogs and evidence-backed host requirements under `manifests/`, syntax contracts under `schemas/`, read-only engine modules under `kalvin/`, and isolated validation under `tests/`. The engine calculates intent, observes bounded local capabilities, and reports deterministic host drift with guidance only.
 
-**PLANNED — absent today.** Inventory persistence, remote inspection, operational orchestration, and bounded deployment tooling remain later, separately reviewed phases. Phase 4E contains no apply/deploy/repair path.
+**PLANNED — absent today.** Inventory persistence, remote inspection, operational orchestration, controlled remediation, and bounded deployment tooling remain later, separately reviewed phases. Phase 4F contains no apply/fix/deploy/repair path.
 
 ## License
 

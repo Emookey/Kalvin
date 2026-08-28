@@ -1,6 +1,6 @@
 # Updates, Rollback, and Drift
 
-Status: **CURRENT lifecycle contract; no updater or drift repair exists.**
+Status: **CURRENT lifecycle contract and Phase 4F host drift reporting; no updater or drift repair exists.**
 
 ## Safe update lifecycle
 
@@ -29,12 +29,12 @@ Every update plan records the last known compatible code/data pair, backup evide
 
 ## Drift model
 
-Future tooling compares three views:
+Phase 4F tooling compares the host-requirement subset of three views:
 
 ```text
 desired manifest <-> resolved deployment record <-> observed host state
 ```
 
-Reportable drift includes a wrong repository commit, unresolved/missing configuration, secret-reference failure, unexpected service, missing/extra mount, path-owner mismatch, profile mismatch, exposure beyond policy, state-class mismatch, or readiness regression.
+Current reportable host drift covers only versioned requirements mapped to sanitized Phase 4E capabilities. Repository commit drift, configuration/secret-provider failures, application readiness, unexpected services, exposure, and deployed-state comparison remain external or future because Phase 4F does not persist/inspect deployed records.
 
-Initial drift tooling reports evidence before repair. It does not automatically stop services, rewrite configuration, change storage, or discard state. Any repair is a separately planned, bounded action with backup and rollback appropriate to the affected state class.
+The engine emits `SATISFIED`, `UNSATISFIED`, `UNKNOWN`, `NOT_APPLICABLE`, or `DECISION_PENDING` with `INFO`, `WARNING`, or `BLOCKING` severity. Guidance always has action `NONE`. It does not automatically stop services, rewrite configuration, change storage, or discard state. Any repair is a separately planned, bounded action with backup and rollback appropriate to the affected state class.

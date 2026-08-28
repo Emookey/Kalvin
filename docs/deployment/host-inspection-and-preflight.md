@@ -1,6 +1,6 @@
 # Read-Only Host Inspection and Preflight
 
-Status: **CURRENT Phase 4E executable; local observation only and no host mutation.**
+Status: **CURRENT Phase 4E observation consumed by Phase 4F policy; local-only and no host mutation.**
 
 ## Purpose and scope
 
@@ -87,7 +87,7 @@ DESIRED profile
   -> host SATISFIED / UNSATISFIED / UNKNOWN / NOT_APPLICABLE
 ```
 
-Profile requirements live in `manifests/host-requirements.json`. Current evidence supports Ubuntu for Core/Storage, Python 3.11+, Git presence, and observable storage/mount inventory for Storage. Default-route capability is optional. CPU architecture support and CPU/RAM/storage capacity minimums remain `NOT_YET_SPECIFIED`; Phase 4E does not invent numbers.
+Profile requirements live in the versioned `manifests/host-requirements.json` contract. Phase 4F formalizes Ubuntu-family and x86_64 support for Core/Storage, Python 3.11+, bootstrap-time Git, and Storage block/mount observability. Exact Ubuntu releases and CPU/RAM/storage/model thresholds remain `HUMAN_DECISION_REQUIRED`; the comparator returns `DECISION_PENDING` rather than inventing values.
 
 An unavailable required capability is `UNSATISFIED` only when absence is positively observed, such as a missing required executable. Missing/permission-denied/indeterminate evidence is `UNKNOWN`. Optional failures are reported without blocking required host status.
 
@@ -99,4 +99,4 @@ Storage checks observation capability without requiring Kal, Beepy, model comput
 
 ## Future boundaries
 
-Possible later work includes a dedicated low-privilege inspector account/process, controlled private inventory persistence, remote-host architecture, richer evidence-backed hardware policy, and a separately authorized deployment engine. None exists in Phase 4E, and each requires its own security and privacy review.
+Phase 4F requirement and drift behavior is documented in [Host Requirements and Drift Policy](host-requirements-and-drift.md). Possible later work includes a dedicated low-privilege inspector account/process, controlled private inventory persistence, remote-host architecture, approved numeric sizing, and a separately authorized remediation/deployment engine. None is implied by inspection or drift output.
