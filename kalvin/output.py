@@ -197,3 +197,95 @@ def preflight_text(preflight: dict[str, Any]) -> str:
         ]
     )
     return "\n".join(lines) + "\n"
+
+
+def _display(value: Any) -> str:
+    if value is None:
+        return "NOT SPECIFIED"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (str, int, float)):
+        return str(value)
+    return "SANITIZED STRUCTURED CAPABILITY"
+
+
+def requirements_text(document: dict[str, Any]) -> str:
+    lines = [
+        "Host requirement policy",
+        f"  Profile: {document['profile']}",
+        f"  Policy version: {document['requirement_policy_version']}",
+        "  Requirements only; no host observation or action performed",
+    ]
+    for item in document["requirements"]:
+        lines.extend(
+            [
+                "",
+                f"[{item['category']}] {item['id']}",
+                f"  State: {item['state']}",
+                f"  Expected: {_display(item['expected'])} ({item['comparison']})",
+                f"  Evidence: {item['evidence_class']} — {item['evidence_source']}",
+                f"  Rationale: {item['reason']}",
+                f"  Lifecycle: {item['lifecycle']}",
+                f"  Blocks host compliance now: {'YES' if item['currently_blocks_host_compliance'] else 'NO'}",
+                f"  Remediation guidance: {item['remediation']['guidance']}",
+                "  Action performed: NONE",
+            ]
+        )
+    return "\n".join(lines) + "\n"
+
+
+def drift_text(report: dict[str, Any]) -> str:
+    summary = report["summary"]
+    lines = [
+        "DRIFT REPORT ONLY",
+        "NO CHANGES PERFORMED",
+        "",
+        "Profile",
+        f"  Selected: {report['profile']}",
+        f"  Requirement policy: {report['requirement_policy_version']}",
+        "",
+        "Host drift",
+        f"  Blocking: {summary['blocking_count']}",
+        f"  Warnings: {summary['warning_count']}",
+        f"  Decision pending: {summary['decision_pending_count']}",
+        f"  Unknown: {summary['unknown_count']}",
+    ]
+    groups = (
+        ("BLOCKING", lambda item: item["severity"] == "BLOCKING"),
+        ("WARNING", lambda item: item["severity"] == "WARNING"),
+        ("DECISION PENDING", lambda item: item["result"] == "DECISION_PENDING"),
+        ("OTHER FINDINGS", lambda item: item["severity"] == "INFO" and item["result"] != "DECISION_PENDING"),
+    )
+    for title, predicate in groups:
+        selected = [item for item in report["findings"] if predicate(item)]
+        lines.extend(["", title])
+        if not selected:
+            lines.append("  - None")
+        for item in selected:
+            lines.extend(
+                [
+                    f"  - {item['id']}: {item['result']} ({item['requirement_state']})",
+                    f"    Expected: {_display(item['expected'])}",
+                    f"    Observed: {item['observed_status']} / {_display(item['observed'])}",
+                    f"    Evidence: {item['evidence_class']}",
+                    f"    Suggested remediation: {item['remediation']['guidance']}",
+                    "    Action performed: NONE",
+                ]
+            )
+    lines.extend(["", "External readiness"])
+    gates = report["external_readiness_summary"]["gates"]
+    if not gates:
+        lines.append("  - None")
+    for gate in gates:
+        lines.append(f"  - {gate['id']}: {gate['status']} (not host drift)")
+    lines.extend(
+        [
+            "",
+            "Result",
+            f"  Host compliance: {report['host_compliance']}",
+            f"  Host drift status: {report['host_drift_status']}",
+            f"  Production readiness: {report['production_readiness']}",
+            "  DRIFT REPORT ONLY — NO CHANGES PERFORMED",
+        ]
+    )
+    return "\n".join(lines) + "\n"

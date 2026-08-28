@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "host-drift.schema.json",
+  "title": "Kalvin read-only host drift report",
+  "description": "Guidance-only comparison output; never a remediation or deployment record.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "requirement_policy_version", "profile", "findings", "summary", "host_compliance", "host_drift_status", "production_readiness", "external_readiness_summary", "resolved_plan_summary", "report_notice", "changes_performed"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "kind": {"const": "KALVIN_HOST_DRIFT_REPORT"},
+    "requirement_policy_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "profile": {"enum": ["lab", "core", "storage"]},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "category", "requirement_state", "comparison", "expected", "observed_status", "observed", "result", "severity", "evidence_class", "evidence_source", "reason", "lifecycle", "explanation", "remediation", "action_performed"],
+        "properties": {
+          "id": {"type": "string"},
+          "category": {"enum": ["OS", "ARCHITECTURE", "RUNTIME", "SERVICE", "CPU", "MEMORY", "STORAGE", "FILESYSTEM", "NETWORK", "TOOLING"]},
+          "requirement_state": {"enum": ["REQUIRED", "OPTIONAL", "RECOMMENDED", "NOT_APPLICABLE", "HUMAN_DECISION_REQUIRED"]},
+          "comparison": {"enum": ["EQUALS", "VERSION_AT_LEAST", "AT_LEAST", "DECISION_PENDING"]},
+          "expected": {},
+          "observed_status": {"enum": ["OBSERVED", "UNAVAILABLE", "INSUFFICIENT_PERMISSION", "UNSUPPORTED", "UNKNOWN", "NOT_EVALUATED"]},
+          "observed": {},
+          "result": {"enum": ["SATISFIED", "UNSATISFIED", "UNKNOWN", "NOT_APPLICABLE", "DECISION_PENDING"]},
+          "severity": {"enum": ["INFO", "WARNING", "BLOCKING"]},
+          "evidence_class": {"enum": ["ARCHITECTURE_REQUIRED", "IMPLEMENTATION_REQUIRED", "APPLICATION_REQUIRED", "RECOMMENDED", "HUMAN_DECISION_REQUIRED"]},
+          "evidence_source": {"type": "string"},
+          "reason": {"type": "string"},
+          "lifecycle": {"type": "string"},
+          "explanation": {"type": "string"},
+          "remediation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "guidance", "action"],
+            "properties": {"id": {"type": "string"}, "guidance": {"type": "string"}, "action": {"const": "NONE"}}
+          },
+          "action_performed": {"const": "NONE"}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blocking_count", "warning_count", "decision_pending_count", "unknown_count", "satisfied_count"],
+      "properties": {
+        "blocking_count": {"type": "integer", "minimum": 0},
+        "warning_count": {"type": "integer", "minimum": 0},
+        "decision_pending_count": {"type": "integer", "minimum": 0},
+        "unknown_count": {"type": "integer", "minimum": 0},
+        "satisfied_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "host_compliance": {"enum": ["SATISFIED", "UNSATISFIED", "UNKNOWN"]},
+    "host_drift_status": {"enum": ["DRIFT_FREE", "DRIFT_DETECTED", "EVIDENCE_INCOMPLETE"]},
+    "production_readiness": {"enum": ["READY", "BLOCKED_EXTERNAL_GATE", "NOT_APPLICABLE"]},
+    "external_readiness_summary": {"type": "object"},
+    "resolved_plan_summary": {"type": "object"},
+    "report_notice": {"const": "DRIFT REPORT ONLY — NO CHANGES PERFORMED"},
+    "changes_performed": {"const": false}
+  }
+}
