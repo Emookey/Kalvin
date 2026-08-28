@@ -10,7 +10,8 @@ from typing import Sequence
 
 from .host_inspector import HostInspector
 from .models import UserInputError
-from .output import observed_host_text, plan_text, stable_json, validation_json, validation_text
+from .output import observed_host_text, plan_text, preflight_text, stable_json, validation_json, validation_text
+from .preflight import compare_preflight
 from .resolver import resolve_plan
 from .validation import validate_architecture
 
@@ -37,6 +38,11 @@ def build_parser() -> argparse.ArgumentParser:
     host_commands = host.add_subparsers(dest="host_command", required=True)
     inspect = host_commands.add_parser("inspect", help="emit a sanitized local observed-host snapshot")
     inspect.add_argument("--format", choices=("text", "json"), default="text", help="observed-host presentation (default: text)")
+    preflight = host_commands.add_parser("preflight", help="compare resolved requirements with sanitized local observation")
+    preflight.add_argument("--profile", required=True, help="profile ID: lab, core, or storage")
+    preflight.add_argument("--lock", required=True, type=Path, help="secret-free immutable repository/version lock JSON")
+    preflight.add_argument("--enable", action="append", default=[], metavar="COMPONENT", help="explicitly select a default-off optional component (repeatable)")
+    preflight.add_argument("--format", choices=("text", "json"), default="text", help="preflight presentation (default: text)")
     return parser
 
 
@@ -55,7 +61,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             sys.stdout.write(stable_json(plan) if args.format == "json" else plan_text(plan))
             return EXIT_SUCCESS
         observed = HostInspector().inspect()
-        sys.stdout.write(stable_json(observed) if args.format == "json" else observed_host_text(observed))
+        if args.host_command == "inspect":
+            sys.stdout.write(stable_json(observed) if args.format == "json" else observed_host_text(observed))
+            return EXIT_SUCCESS
+        plan = resolve_plan(args.profile, args.lock, enabled_optional=args.enable)
+        architecture, validation = validate_architecture()
+        if architecture is None or not validation.valid:
+            raise UserInputError("Architecture became invalid before host preflight")
+        result = compare_preflight(plan, observed, architecture.catalogs["host-requirements"])
+        sys.stdout.write(stable_json(result) if args.format == "json" else preflight_text(result))
         return EXIT_SUCCESS
     except UserInputError as exc:
         sys.stderr.write(f"ERROR: {exc}\n")

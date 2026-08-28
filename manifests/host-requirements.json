@@ -1,0 +1,104 @@
+{
+  "$schema": "../schemas/host-requirements.schema.json",
+  "schema_version": "1.0.0",
+  "contract_status": "reference-architecture",
+  "operational": false,
+  "requirements": [
+    {
+      "id": "host.os-family",
+      "description": "Supported reconstruction currently targets Ubuntu Server.",
+      "observation_path": "operating_system.family",
+      "comparison": "EQUALS",
+      "expected": "ubuntu",
+      "profiles": {"lab": "OPTIONAL", "core": "REQUIRED", "storage": "REQUIRED"}
+    },
+    {
+      "id": "runtime.python-version",
+      "description": "The Kalvin package declares Python 3.11 or newer.",
+      "observation_path": "runtimes.python.version",
+      "comparison": "VERSION_AT_LEAST",
+      "expected": "3.11",
+      "profiles": {"lab": "REQUIRED", "core": "REQUIRED", "storage": "REQUIRED"}
+    },
+    {
+      "id": "capability.git",
+      "description": "Git is part of the documented repository reconstruction path.",
+      "observation_path": "executables.git.present",
+      "comparison": "EQUALS",
+      "expected": true,
+      "profiles": {"lab": "REQUIRED", "core": "REQUIRED", "storage": "REQUIRED"}
+    },
+    {
+      "id": "storage.block-inventory-observable",
+      "description": "Storage must permit sanitized block-capability observation without elevation.",
+      "observation_path": "block_storage.status",
+      "comparison": "EQUALS",
+      "expected": "OBSERVED",
+      "profiles": {"lab": "OPTIONAL", "core": "OPTIONAL", "storage": "REQUIRED"}
+    },
+    {
+      "id": "storage.mount-inventory-observable",
+      "description": "Storage must permit sanitized mount-capability observation without elevation.",
+      "observation_path": "filesystems.status",
+      "comparison": "EQUALS",
+      "expected": "OBSERVED",
+      "profiles": {"lab": "OPTIONAL", "core": "OPTIONAL", "storage": "REQUIRED"}
+    },
+    {
+      "id": "network.default-route",
+      "description": "Default-route capability is observed for later acquisition/backup design but is not yet mandatory.",
+      "observation_path": "network.default_route.present",
+      "comparison": "EQUALS",
+      "expected": true,
+      "profiles": {"lab": "OPTIONAL", "core": "OPTIONAL", "storage": "OPTIONAL"}
+    },
+    {
+      "id": "host.architecture-support",
+      "description": "Supported architecture policy requires a human decision.",
+      "observation_path": "operating_system.architecture",
+      "comparison": "NOT_YET_SPECIFIED",
+      "expected": null,
+      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+    },
+    {
+      "id": "host.minimum-logical-cpu",
+      "description": "No evidence-backed logical CPU minimum exists yet.",
+      "observation_path": "cpu.logical_cpu_count",
+      "comparison": "NOT_YET_SPECIFIED",
+      "expected": null,
+      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+    },
+    {
+      "id": "host.minimum-memory",
+      "description": "No evidence-backed physical-memory minimum exists yet.",
+      "observation_path": "memory.total_bytes",
+      "comparison": "NOT_YET_SPECIFIED",
+      "expected": null,
+      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+    },
+    {
+      "id": "host.minimum-storage-capacity",
+      "description": "No evidence-backed storage-capacity minimum exists yet.",
+      "observation_path": "block_storage.devices",
+      "comparison": "NOT_YET_SPECIFIED",
+      "expected": null,
+      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+    },
+    {
+      "id": "host.systemd-requirement",
+      "description": "The orchestration mechanism has not selected systemd as mandatory.",
+      "observation_path": "systemd.available",
+      "comparison": "NOT_YET_SPECIFIED",
+      "expected": null,
+      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+    },
+    {
+      "id": "host.docker-requirement",
+      "description": "The orchestration mechanism has not selected Docker as mandatory.",
+      "observation_path": "docker.cli.present",
+      "comparison": "NOT_YET_SPECIFIED",
+      "expected": null,
+      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+    }
+  ]
+}

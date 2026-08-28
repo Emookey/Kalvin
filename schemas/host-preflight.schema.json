@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "host-preflight.schema.json",
+  "title": "Kalvin read-only host preflight result",
+  "description": "Comparison result only; contains no correction or deployment action.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "profile", "host_preflight_status", "production_readiness", "checks", "external_readiness_gates", "resolved_plan_summary", "observed_host", "correction_performed"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "kind": {"const": "KALVIN_HOST_PREFLIGHT"},
+    "profile": {"enum": ["lab", "core", "storage"]},
+    "host_preflight_status": {"enum": ["SATISFIED", "UNSATISFIED", "UNKNOWN", "NOT_APPLICABLE"]},
+    "production_readiness": {"enum": ["READY", "BLOCKED_EXTERNAL_GATE", "NOT_APPLICABLE"]},
+    "checks": {"type": "array", "items": {"type": "object"}},
+    "external_readiness_gates": {"type": "array", "items": {"type": "object"}},
+    "resolved_plan_summary": {"type": "object"},
+    "observed_host": {"$ref": "observed-host.schema.json"},
+    "correction_performed": {"const": false}
+  }
+}

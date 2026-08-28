@@ -16,6 +16,7 @@ CATALOG_PATHS = {
     "components": Path("manifests/components.json"),
     "readiness-gates": Path("manifests/readiness-gates.json"),
     "compatibility": Path("manifests/compatibility.json"),
+    "host-requirements": Path("manifests/host-requirements.json"),
 }
 PROFILE_IDS = ("core", "lab", "storage")
 

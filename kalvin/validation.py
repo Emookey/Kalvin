@@ -386,6 +386,21 @@ def _validate_policy(architecture: Architecture, result: ValidationResult) -> No
                 result.add("POLICY ERROR", "secret-looking-value", f"deploy/profiles/{profile_name}.json:{location}", f"{reason} is forbidden in declarative contracts")
 
 
+def _validate_host_requirements(architecture: Architecture, result: ValidationResult) -> None:
+    document = architecture.catalogs["host-requirements"]
+    requirements = document["requirements"]
+    identifiers = [item["id"] for item in requirements]
+    for duplicate in _duplicates(identifiers):
+        result.add("SEMANTIC ERROR", "duplicate-host-requirement", "manifests/host-requirements.json", f"duplicate host requirement {duplicate!r}")
+    for requirement in requirements:
+        comparison = requirement["comparison"]
+        expected = requirement["expected"]
+        if comparison == "NOT_YET_SPECIFIED" and expected is not None:
+            result.add("POLICY ERROR", "unspecified-host-threshold", requirement["id"], "NOT_YET_SPECIFIED must not invent an expected value")
+        if comparison != "NOT_YET_SPECIFIED" and all(value == "NOT_YET_SPECIFIED" for value in requirement["profiles"].values()):
+            result.add("POLICY ERROR", "unused-host-comparison", requirement["id"], "all profiles are unspecified but a concrete comparison was declared")
+
+
 def validate_bundle(architecture: Architecture) -> ValidationResult:
     """Validate a loaded architecture without reading host or runtime state."""
     result = ValidationResult()
@@ -396,6 +411,7 @@ def validate_bundle(architecture: Architecture) -> ValidationResult:
     _validate_components(architecture, result)
     _validate_profiles(architecture, result)
     _validate_policy(architecture, result)
+    _validate_host_requirements(architecture, result)
     return result
 
 

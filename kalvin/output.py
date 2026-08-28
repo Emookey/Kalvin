@@ -171,3 +171,29 @@ def observed_host_text(observed: dict[str, Any]) -> str:
         ]
     )
     return "\n".join(lines) + "\n"
+
+
+def preflight_text(preflight: dict[str, Any]) -> str:
+    lines = [
+        "Host preflight",
+        f"  Profile: {preflight['profile']}",
+        f"  Host capability result: {preflight['host_preflight_status']}",
+        f"  Production readiness: {preflight['production_readiness']}",
+        "",
+        "Capability checks",
+    ]
+    for item in preflight["checks"]:
+        lines.append(f"  - {item['id']}: {item['requirement']} / {item['status']} — {item['explanation']}")
+    lines.extend(["", "External application/platform gates"])
+    if not preflight["external_readiness_gates"]:
+        lines.append("  - None")
+    for item in preflight["external_readiness_gates"]:
+        lines.append(f"  - {item['id']}: {item['status']}")
+    lines.extend(
+        [
+            "",
+            "Result",
+            "  Comparison only; no correction, deployment, persistence, or host change performed",
+        ]
+    )
+    return "\n".join(lines) + "\n"
