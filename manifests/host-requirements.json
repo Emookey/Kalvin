@@ -1,104 +1,155 @@
 {
   "$schema": "../schemas/host-requirements.schema.json",
-  "schema_version": "1.0.0",
+  "schema_version": "2.0.0",
+  "policy_version": "1.0.0",
   "contract_status": "reference-architecture",
   "operational": false,
+  "severity_policy": {
+    "required_unsatisfied": "BLOCKING",
+    "required_unknown": "WARNING",
+    "recommended_unsatisfied": "WARNING",
+    "recommended_unknown": "WARNING",
+    "optional": "INFO",
+    "decision_pending": "INFO",
+    "satisfied": "INFO"
+  },
+  "remediations": [
+    {"id": "review-supported-os", "guidance": "Select a host from the approved Ubuntu Server family and validate its release through the supported-host review.", "action": "NONE"},
+    {"id": "approve-os-release-range", "guidance": "Approve and record exact Ubuntu Server releases or a compatibility range before enforcing release-specific drift.", "action": "NONE"},
+    {"id": "review-supported-architecture", "guidance": "Use the currently tested x86_64 architecture or complete a separate compatibility review for another architecture.", "action": "NONE"},
+    {"id": "provision-python-runtime", "guidance": "Provision an approved Python 3.11 or newer runtime through a separately reviewed bootstrap procedure.", "action": "NONE"},
+    {"id": "provision-git-bootstrap-tooling", "guidance": "Provide approved Git tooling for repository reconstruction and immutable version management during bootstrap.", "action": "NONE"},
+    {"id": "review-system-service-integration", "guidance": "Review system-service integration and decide whether systemd becomes a required long-term platform contract.", "action": "NONE"},
+    {"id": "select-container-runtime-policy", "guidance": "Select and approve the profile-specific container runtime policy before treating Docker as mandatory.", "action": "NONE"},
+    {"id": "restore-block-observation", "guidance": "Restore non-elevated, read-only block capability observation through an approved host-administration procedure.", "action": "NONE"},
+    {"id": "restore-mount-observation", "guidance": "Restore non-elevated, sanitized mount capability observation through an approved host-administration procedure.", "action": "NONE"},
+    {"id": "review-default-route-policy", "guidance": "Review whether the selected profile and integrations require a default route; preserve offline or local-only designs where valid.", "action": "NONE"},
+    {"id": "approve-cpu-sizing-method", "guidance": "Choose a component-derived CPU sizing method and validate workloads before approving an enforceable threshold.", "action": "NONE"},
+    {"id": "approve-memory-sizing-method", "guidance": "Choose a component and model workload-derived memory sizing method before approving an enforceable threshold.", "action": "NONE"},
+    {"id": "approve-core-capacity-method", "guidance": "Size Core local state and backup staging from selected applications and recovery workflow without making Core the retention authority.", "action": "NONE"},
+    {"id": "approve-storage-capacity-method", "guidance": "Size Storage from protected working sets, approved retention, replication, and safety margin before enforcing capacity.", "action": "NONE"},
+    {"id": "approve-model-compute-contract", "guidance": "Derive compute requirements from the selected provider and model, then approve profile-specific CPU, memory, GPU, and VRAM policy.", "action": "NONE"}
+  ],
   "requirements": [
     {
-      "id": "host.os-family",
-      "description": "Supported reconstruction currently targets Ubuntu Server.",
-      "observation_path": "operating_system.family",
-      "comparison": "EQUALS",
-      "expected": "ubuntu",
-      "profiles": {"lab": "OPTIONAL", "core": "REQUIRED", "storage": "REQUIRED"}
+      "id": "host.os-family", "category": "OS", "description": "Initial supported production reconstruction targets the Ubuntu Server family.",
+      "observation_path": "operating_system.family", "comparison": "EQUALS", "expected": "ubuntu",
+      "evidence_class": "ARCHITECTURE_REQUIRED", "evidence_source": "README.md and docs/deployment/portability-and-readiness.md reconstruction contract",
+      "reason": "The documented fresh-host path names Ubuntu Server; other distribution families have not been validated.",
+      "lifecycle": "HOST_RUNTIME", "decision_state": "APPROVED", "remediation_id": "review-supported-os", "applies_when_components": [],
+      "profiles": {"lab": "RECOMMENDED", "core": "REQUIRED", "storage": "REQUIRED"}
     },
     {
-      "id": "runtime.python-version",
-      "description": "The Kalvin package declares Python 3.11 or newer.",
-      "observation_path": "runtimes.python.version",
-      "comparison": "VERSION_AT_LEAST",
-      "expected": "3.11",
+      "id": "host.os-release-support", "category": "OS", "description": "Exact supported Ubuntu Server releases or compatibility range remain unapproved.",
+      "observation_path": "operating_system.version", "comparison": "DECISION_PENDING", "expected": null,
+      "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "No canonical release compatibility matrix exists.",
+      "reason": "Release-specific enforcement requires tested package and runtime compatibility evidence.",
+      "lifecycle": "HOST_RUNTIME", "decision_state": "PENDING", "remediation_id": "approve-os-release-range", "applies_when_components": [],
+      "profiles": {"lab": "HUMAN_DECISION_REQUIRED", "core": "HUMAN_DECISION_REQUIRED", "storage": "HUMAN_DECISION_REQUIRED"}
+    },
+    {
+      "id": "host.architecture-support", "category": "ARCHITECTURE", "description": "x86_64 is the initial tested host architecture; other architectures require compatibility evidence.",
+      "observation_path": "operating_system.architecture", "comparison": "EQUALS", "expected": "x86_64",
+      "evidence_class": "IMPLEMENTATION_REQUIRED", "evidence_source": "Current canonical platform/application operating environment and Phase 4E architecture observation contract",
+      "reason": "No ARM or other architecture compatibility validation is recorded.",
+      "lifecycle": "HOST_RUNTIME", "decision_state": "APPROVED", "remediation_id": "review-supported-architecture", "applies_when_components": [],
+      "profiles": {"lab": "RECOMMENDED", "core": "REQUIRED", "storage": "REQUIRED"}
+    },
+    {
+      "id": "runtime.python-version", "category": "RUNTIME", "description": "Kalvin executable tooling requires Python 3.11 or newer on every profile where the CLI runs.",
+      "observation_path": "runtimes.python.version", "comparison": "VERSION_AT_LEAST", "expected": "3.11",
+      "evidence_class": "IMPLEMENTATION_REQUIRED", "evidence_source": "pyproject.toml requires-python",
+      "reason": "This is the Kalvin tooling runtime requirement, not a Kal or Beepy application runtime declaration.",
+      "lifecycle": "KALVIN_EXECUTION", "decision_state": "APPROVED", "remediation_id": "provision-python-runtime", "applies_when_components": [],
       "profiles": {"lab": "REQUIRED", "core": "REQUIRED", "storage": "REQUIRED"}
     },
     {
-      "id": "capability.git",
-      "description": "Git is part of the documented repository reconstruction path.",
-      "observation_path": "executables.git.present",
-      "comparison": "EQUALS",
-      "expected": true,
+      "id": "capability.git", "category": "TOOLING", "description": "Git is required during repository reconstruction and immutable version management.",
+      "observation_path": "executables.git.present", "comparison": "EQUALS", "expected": true,
+      "evidence_class": "ARCHITECTURE_REQUIRED", "evidence_source": "Canonical independent-repository reconstruction and lock contract",
+      "reason": "The requirement is bootstrap-time; it does not claim each steady-state service executes Git.",
+      "lifecycle": "BOOTSTRAP_TIME", "decision_state": "APPROVED", "remediation_id": "provision-git-bootstrap-tooling", "applies_when_components": [],
       "profiles": {"lab": "REQUIRED", "core": "REQUIRED", "storage": "REQUIRED"}
     },
     {
-      "id": "storage.block-inventory-observable",
-      "description": "Storage must permit sanitized block-capability observation without elevation.",
-      "observation_path": "block_storage.status",
-      "comparison": "EQUALS",
-      "expected": "OBSERVED",
-      "profiles": {"lab": "OPTIONAL", "core": "OPTIONAL", "storage": "REQUIRED"}
+      "id": "host.systemd-requirement", "category": "SERVICE", "description": "systemd is recommended for the current Ubuntu-oriented service integration but is not yet a permanent platform invariant.",
+      "observation_path": "systemd.available", "comparison": "EQUALS", "expected": true,
+      "evidence_class": "RECOMMENDED", "evidence_source": "Ubuntu Server orientation and future service-management design; no operational units exist yet",
+      "reason": "A later service implementation must decide whether alternatives are supported.",
+      "lifecycle": "CURRENT_IMPLEMENTATION", "decision_state": "PENDING", "remediation_id": "review-system-service-integration", "applies_when_components": [],
+      "profiles": {"lab": "RECOMMENDED", "core": "RECOMMENDED", "storage": "RECOMMENDED"}
     },
     {
-      "id": "storage.mount-inventory-observable",
-      "description": "Storage must permit sanitized mount-capability observation without elevation.",
-      "observation_path": "filesystems.status",
-      "comparison": "EQUALS",
-      "expected": "OBSERVED",
-      "profiles": {"lab": "OPTIONAL", "core": "OPTIONAL", "storage": "REQUIRED"}
+      "id": "host.docker-requirement", "category": "RUNTIME", "description": "Docker is observable but no canonical deployment implementation makes it universally mandatory yet.",
+      "observation_path": "docker.cli.present", "comparison": "EQUALS", "expected": true,
+      "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "Phase 4E observes Docker capability; Phase 4C/4D contain no operational container implementation",
+      "reason": "Core and Storage runtime selection must be approved independently; Storage must not inherit Core compute assumptions.",
+      "lifecycle": "CURRENT_IMPLEMENTATION", "decision_state": "PENDING", "remediation_id": "select-container-runtime-policy", "applies_when_components": [],
+      "profiles": {"lab": "OPTIONAL", "core": "HUMAN_DECISION_REQUIRED", "storage": "HUMAN_DECISION_REQUIRED"}
     },
     {
-      "id": "network.default-route",
-      "description": "Default-route capability is observed for later acquisition/backup design but is not yet mandatory.",
-      "observation_path": "network.default_route.present",
-      "comparison": "EQUALS",
-      "expected": true,
-      "profiles": {"lab": "OPTIONAL", "core": "OPTIONAL", "storage": "OPTIONAL"}
+      "id": "storage.block-inventory-observable", "category": "STORAGE", "description": "Storage must permit sanitized block-capability observation without elevation.",
+      "observation_path": "block_storage.status", "comparison": "EQUALS", "expected": "OBSERVED",
+      "evidence_class": "ARCHITECTURE_REQUIRED", "evidence_source": "Storage backup/retention role and Phase 4E sanitized inventory contract",
+      "reason": "This proves observability only; it does not prove capacity, topology, health, or repository readiness.",
+      "lifecycle": "HOST_RUNTIME", "decision_state": "APPROVED", "remediation_id": "restore-block-observation", "applies_when_components": [],
+      "profiles": {"lab": "OPTIONAL", "core": "RECOMMENDED", "storage": "REQUIRED"}
     },
     {
-      "id": "host.architecture-support",
-      "description": "Supported architecture policy requires a human decision.",
-      "observation_path": "operating_system.architecture",
-      "comparison": "NOT_YET_SPECIFIED",
-      "expected": null,
-      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+      "id": "storage.mount-inventory-observable", "category": "FILESYSTEM", "description": "Storage must permit sanitized mount-capability observation without elevation.",
+      "observation_path": "filesystems.status", "comparison": "EQUALS", "expected": "OBSERVED",
+      "evidence_class": "ARCHITECTURE_REQUIRED", "evidence_source": "Storage backup/retention role and Phase 4E sanitized mount contract",
+      "reason": "This proves observability only and does not expose mount source or options.",
+      "lifecycle": "HOST_RUNTIME", "decision_state": "APPROVED", "remediation_id": "restore-mount-observation", "applies_when_components": [],
+      "profiles": {"lab": "OPTIONAL", "core": "RECOMMENDED", "storage": "REQUIRED"}
     },
     {
-      "id": "host.minimum-logical-cpu",
-      "description": "No evidence-backed logical CPU minimum exists yet.",
-      "observation_path": "cpu.logical_cpu_count",
-      "comparison": "NOT_YET_SPECIFIED",
-      "expected": null,
-      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+      "id": "network.default-route", "category": "NETWORK", "description": "Default-route presence is useful for Core integrations but is not universally mandatory.",
+      "observation_path": "network.default_route.present", "comparison": "EQUALS", "expected": true,
+      "evidence_class": "RECOMMENDED", "evidence_source": "Repository acquisition and outbound backup concepts without a fixed transport topology",
+      "reason": "Offline Lab and local-only Storage designs may be valid; no address, DNS, or reachability probe is authorized.",
+      "lifecycle": "HOST_RUNTIME", "decision_state": "APPROVED", "remediation_id": "review-default-route-policy", "applies_when_components": [],
+      "profiles": {"lab": "OPTIONAL", "core": "RECOMMENDED", "storage": "OPTIONAL"}
     },
     {
-      "id": "host.minimum-memory",
-      "description": "No evidence-backed physical-memory minimum exists yet.",
-      "observation_path": "memory.total_bytes",
-      "comparison": "NOT_YET_SPECIFIED",
-      "expected": null,
-      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+      "id": "host.minimum-logical-cpu", "category": "CPU", "description": "No evidence-backed logical CPU minimum exists.",
+      "observation_path": "cpu.logical_cpu_count", "comparison": "DECISION_PENDING", "expected": null,
+      "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "No canonical workload benchmark or component sizing contract exists.",
+      "reason": "The current host and any planned single machine must not define universal minimums.",
+      "lifecycle": "CAPACITY_POLICY", "decision_state": "PENDING", "remediation_id": "approve-cpu-sizing-method", "applies_when_components": [],
+      "profiles": {"lab": "HUMAN_DECISION_REQUIRED", "core": "HUMAN_DECISION_REQUIRED", "storage": "HUMAN_DECISION_REQUIRED"}
     },
     {
-      "id": "host.minimum-storage-capacity",
-      "description": "No evidence-backed storage-capacity minimum exists yet.",
-      "observation_path": "block_storage.devices",
-      "comparison": "NOT_YET_SPECIFIED",
-      "expected": null,
-      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+      "id": "host.minimum-memory", "category": "MEMORY", "description": "No evidence-backed physical-memory minimum exists.",
+      "observation_path": "memory.total_bytes", "comparison": "DECISION_PENDING", "expected": null,
+      "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "No canonical application/model memory sizing contract exists.",
+      "reason": "Memory must be derived from selected applications and model runtime rather than one development host.",
+      "lifecycle": "CAPACITY_POLICY", "decision_state": "PENDING", "remediation_id": "approve-memory-sizing-method", "applies_when_components": [],
+      "profiles": {"lab": "HUMAN_DECISION_REQUIRED", "core": "HUMAN_DECISION_REQUIRED", "storage": "HUMAN_DECISION_REQUIRED"}
     },
     {
-      "id": "host.systemd-requirement",
-      "description": "The orchestration mechanism has not selected systemd as mandatory.",
-      "observation_path": "systemd.available",
-      "comparison": "NOT_YET_SPECIFIED",
-      "expected": null,
-      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+      "id": "host.minimum-storage-capacity", "category": "STORAGE", "description": "Core local application and backup-staging capacity has no approved numeric minimum.",
+      "observation_path": "block_storage.devices", "comparison": "DECISION_PENDING", "expected": null,
+      "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "Selected application working sets and backup staging policy are not yet quantified.",
+      "reason": "Core capacity must not turn Core into the authoritative retention repository.",
+      "lifecycle": "CAPACITY_POLICY", "decision_state": "PENDING", "remediation_id": "approve-core-capacity-method", "applies_when_components": [],
+      "profiles": {"lab": "HUMAN_DECISION_REQUIRED", "core": "HUMAN_DECISION_REQUIRED", "storage": "NOT_APPLICABLE"}
     },
     {
-      "id": "host.docker-requirement",
-      "description": "The orchestration mechanism has not selected Docker as mandatory.",
-      "observation_path": "docker.cli.present",
-      "comparison": "NOT_YET_SPECIFIED",
-      "expected": null,
-      "profiles": {"lab": "NOT_YET_SPECIFIED", "core": "NOT_YET_SPECIFIED", "storage": "NOT_YET_SPECIFIED"}
+      "id": "storage.retention-capacity", "category": "STORAGE", "description": "Storage retention capacity must be policy-derived; no universal byte threshold is approved.",
+      "observation_path": "block_storage.devices", "comparison": "DECISION_PENDING", "expected": null,
+      "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "Retention values, replication topology, and protected working-set sizes remain open.",
+      "reason": "Capacity should derive from backup working set, retention, replication, and safety margin.",
+      "lifecycle": "CAPACITY_POLICY", "decision_state": "PENDING", "remediation_id": "approve-storage-capacity-method", "applies_when_components": ["storage-backup-target"],
+      "profiles": {"lab": "NOT_APPLICABLE", "core": "NOT_APPLICABLE", "storage": "HUMAN_DECISION_REQUIRED"}
+    },
+    {
+      "id": "model-runtime.compute-capacity", "category": "RUNTIME", "description": "CPU, memory, GPU, and VRAM requirements depend on the selected model provider and model.",
+      "observation_path": null, "comparison": "DECISION_PENDING", "expected": null,
+      "evidence_class": "APPLICATION_REQUIRED", "evidence_source": "Provider-neutral model-runtime component contract",
+      "reason": "Kalvin must not invent hardware limits or equate the logical component with Ollama or one GPU.",
+      "lifecycle": "COMPONENT_DERIVED", "decision_state": "PENDING", "remediation_id": "approve-model-compute-contract", "applies_when_components": ["model-runtime"],
+      "profiles": {"lab": "HUMAN_DECISION_REQUIRED", "core": "HUMAN_DECISION_REQUIRED", "storage": "NOT_APPLICABLE"}
     }
   ]
 }

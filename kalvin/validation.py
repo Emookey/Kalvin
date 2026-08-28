@@ -11,6 +11,7 @@ from typing import Any, Iterable
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
 
+from .drift import OBSERVATION_PATHS, REQUIREMENT_STATES, SEVERITIES
 from .graph import find_cycle
 from .loader import load_architecture
 from .models import Architecture, ValidationResult
@@ -76,6 +77,18 @@ def legacy_runtime_path(value: str) -> bool:
     lowered = value.lower()
     legacy_parts = ("/" + "goodwill", "/" + "odysseus" + "-ai", "/" + "mbc" + "-intelligence")
     return any(part in lowered for part in legacy_parts)
+
+
+def secret_bearing_contract_path(value: str) -> bool:
+    if not value.startswith("/"):
+        return False
+    parts = [part.lower() for part in Path(value).parts]
+    return any(
+        part in {"secret", "secrets", "credential", "credentials", ".env", "id_rsa", "id_ed25519", "id_ecdsa"}
+        or part.startswith(".env.")
+        or part.endswith((".pem", ".p12", ".pfx"))
+        for part in parts
+    )
 
 
 def _schema_location(error: Any) -> str:
@@ -379,6 +392,8 @@ def _validate_policy(architecture: Architecture, result: ValidationResult) -> No
                 result.add("POLICY ERROR", "secret-looking-value", f"manifests/{catalog_name}.json:{location}", f"{reason} is forbidden in declarative contracts")
             if legacy_runtime_path(value):
                 result.add("POLICY ERROR", "legacy-runtime-path", f"manifests/{catalog_name}.json:{location}", "legacy absolute runtime path is forbidden")
+            if catalog_name == "host-requirements" and secret_bearing_contract_path(value):
+                result.add("POLICY ERROR", "secret-bearing-path", f"manifests/{catalog_name}.json:{location}", "secret-bearing paths are forbidden in public declarative contracts")
     for profile_name, document in architecture.profiles.items():
         for location, value in _walk_strings(document):
             reason = sensitive_value_reason(value)
@@ -390,15 +405,72 @@ def _validate_host_requirements(architecture: Architecture, result: ValidationRe
     document = architecture.catalogs["host-requirements"]
     requirements = document["requirements"]
     identifiers = [item["id"] for item in requirements]
+    remediations = document["remediations"]
+    remediation_ids = [item["id"] for item in remediations]
+    component_ids = {item["id"] for item in architecture.catalogs["components"]["components"]}
     for duplicate in _duplicates(identifiers):
         result.add("SEMANTIC ERROR", "duplicate-host-requirement", "manifests/host-requirements.json", f"duplicate host requirement {duplicate!r}")
+    for duplicate in _duplicates(remediation_ids):
+        result.add("SEMANTIC ERROR", "duplicate-remediation", "manifests/host-requirements.json", f"duplicate remediation identity {duplicate!r}")
+
+    remediation_id_set = set(remediation_ids)
+    shell_patterns = (
+        re.compile(r"(?:^|\s)(?:sudo|su|doas)\s", re.IGNORECASE),
+        re.compile(r"\b(?:apt|apt-get)\s+(?:install|remove|update|upgrade)\b", re.IGNORECASE),
+        re.compile(r"\bsystemctl\s+(?:start|stop|restart|enable|disable|reload)\b", re.IGNORECASE),
+        re.compile(r"\bdocker\s+(?:run|start|stop|restart|exec|rm|compose)\b", re.IGNORECASE),
+        re.compile(r"\b(?:mount|umount|mkfs|fdisk|parted|curl|wget|ssh|scp|rsync)\s+-", re.IGNORECASE),
+        re.compile(r"(?:#!|\$\(|&&|\|\||`)"),
+    )
+    for remediation in remediations:
+        if remediation.get("action") != "NONE":
+            result.add("POLICY ERROR", "automatic-remediation", remediation.get("id", "unknown"), "remediation action must remain NONE")
+        if any(pattern.search(remediation.get("guidance", "")) for pattern in shell_patterns):
+            result.add("POLICY ERROR", "executable-remediation", remediation.get("id", "unknown"), "remediation guidance must not contain executable shell")
+
+    severity_policy = document["severity_policy"]
+    if set(severity_policy.values()) - SEVERITIES:
+        result.add("SEMANTIC ERROR", "unknown-drift-severity", "severity_policy", "unknown drift severity")
+    if severity_policy["required_unsatisfied"] != "BLOCKING":
+        result.add("POLICY ERROR", "required-drift-not-blocking", "severity_policy", "unsatisfied REQUIRED capabilities must be BLOCKING")
+    if severity_policy["decision_pending"] == "BLOCKING":
+        result.add("POLICY ERROR", "decision-pending-blocking", "severity_policy", "human decisions may not masquerade as blocking host drift")
+    if severity_policy["optional"] == "BLOCKING":
+        result.add("POLICY ERROR", "optional-drift-blocking", "severity_policy", "optional capabilities may not block host compliance")
+
     for requirement in requirements:
         comparison = requirement["comparison"]
         expected = requirement["expected"]
-        if comparison == "NOT_YET_SPECIFIED" and expected is not None:
-            result.add("POLICY ERROR", "unspecified-host-threshold", requirement["id"], "NOT_YET_SPECIFIED must not invent an expected value")
-        if comparison != "NOT_YET_SPECIFIED" and all(value == "NOT_YET_SPECIFIED" for value in requirement["profiles"].values()):
-            result.add("POLICY ERROR", "unused-host-comparison", requirement["id"], "all profiles are unspecified but a concrete comparison was declared")
+        requirement_id = requirement["id"]
+        states = set(requirement["profiles"].values())
+        if states - REQUIREMENT_STATES:
+            result.add("SEMANTIC ERROR", "unknown-requirement-state", requirement_id, "unknown profile requirement state")
+        if requirement["remediation_id"] not in remediation_id_set:
+            result.add("CROSS-REFERENCE ERROR", "unknown-remediation", requirement_id, f"unknown remediation {requirement['remediation_id']!r}")
+        path = requirement["observation_path"]
+        if path is not None and path not in OBSERVATION_PATHS:
+            result.add("CROSS-REFERENCE ERROR", "unknown-observed-capability", requirement_id, f"unknown observed capability {path!r}")
+        if comparison != "DECISION_PENDING" and path is None:
+            result.add("SEMANTIC ERROR", "missing-observed-capability", requirement_id, "concrete comparison requires an observation path")
+        if comparison == "DECISION_PENDING" and expected is not None:
+            result.add("POLICY ERROR", "decision-pending-threshold", requirement_id, "decision-pending requirement must not invent an expected value")
+        if comparison == "EQUALS" and expected is None:
+            result.add("SEMANTIC ERROR", "incompatible-expected-value", requirement_id, "EQUALS requires a concrete expected value")
+        if comparison == "VERSION_AT_LEAST" and _version_for_requirement(expected) is None:
+            result.add("SEMANTIC ERROR", "incompatible-expected-value", requirement_id, "VERSION_AT_LEAST requires a dotted numeric string")
+        if comparison == "AT_LEAST" and (isinstance(expected, bool) or not isinstance(expected, (int, float))):
+            result.add("SEMANTIC ERROR", "incompatible-expected-value", requirement_id, "AT_LEAST requires a numeric expected value")
+        if "HUMAN_DECISION_REQUIRED" in states and requirement["decision_state"] != "PENDING":
+            result.add("POLICY ERROR", "human-decision-marked-approved", requirement_id, "human-decision requirements must remain PENDING")
+        for component_id in requirement["applies_when_components"]:
+            if component_id not in component_ids:
+                result.add("CROSS-REFERENCE ERROR", "unknown-requirement-component", requirement_id, f"unknown component {component_id!r}")
+
+
+def _version_for_requirement(value: Any) -> tuple[int, ...] | None:
+    if not isinstance(value, str) or re.fullmatch(r"\d+(?:\.\d+)*", value) is None:
+        return None
+    return tuple(int(part) for part in value.split("."))
 
 
 def validate_bundle(architecture: Architecture) -> ValidationResult:

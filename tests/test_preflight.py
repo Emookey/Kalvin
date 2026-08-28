@@ -73,10 +73,10 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(route["status"], "UNSATISFIED")
         self.assertEqual(result["host_preflight_status"], "SATISFIED")
 
-    def test_unspecified_hardware_minimums_are_reported_unknown(self) -> None:
+    def test_undecided_hardware_minimums_are_reported_unknown(self) -> None:
         result = self.result("core")
         memory = next(item for item in result["checks"] if item["id"] == "host.minimum-memory")
-        self.assertEqual(memory["requirement"], "NOT_YET_SPECIFIED")
+        self.assertEqual(memory["requirement"], "HUMAN_DECISION_REQUIRED")
         self.assertEqual(memory["status"], "UNKNOWN")
 
     def test_preflight_never_reports_correction(self) -> None:

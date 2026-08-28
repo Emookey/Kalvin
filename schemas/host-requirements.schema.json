@@ -1,54 +1,84 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "host-requirements.schema.json",
-  "title": "Kalvin profile host-capability requirements",
+  "title": "Kalvin evidence-backed profile host requirement policy",
   "type": "object",
   "additionalProperties": false,
-  "required": ["$schema", "schema_version", "contract_status", "operational", "requirements"],
+  "required": ["$schema", "schema_version", "policy_version", "contract_status", "operational", "severity_policy", "remediations", "requirements"],
   "properties": {
     "$schema": {"type": "string"},
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"const": "2.0.0"},
+    "policy_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
     "contract_status": {"const": "reference-architecture"},
     "operational": {"const": false},
+    "severity_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_unsatisfied", "required_unknown", "recommended_unsatisfied", "recommended_unknown", "optional", "decision_pending", "satisfied"],
+      "properties": {
+        "required_unsatisfied": {"enum": ["INFO", "WARNING", "BLOCKING"]},
+        "required_unknown": {"enum": ["INFO", "WARNING", "BLOCKING"]},
+        "recommended_unsatisfied": {"enum": ["INFO", "WARNING", "BLOCKING"]},
+        "recommended_unknown": {"enum": ["INFO", "WARNING", "BLOCKING"]},
+        "optional": {"enum": ["INFO", "WARNING", "BLOCKING"]},
+        "decision_pending": {"enum": ["INFO", "WARNING", "BLOCKING"]},
+        "satisfied": {"enum": ["INFO", "WARNING", "BLOCKING"]}
+      }
+    },
+    "remediations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "guidance", "action"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"},
+          "guidance": {"type": "string", "minLength": 1},
+          "action": {"const": "NONE"}
+        }
+      }
+    },
     "requirements": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "description", "observation_path", "comparison", "expected", "profiles"],
+        "required": ["id", "category", "description", "observation_path", "comparison", "expected", "evidence_class", "evidence_source", "reason", "lifecycle", "decision_state", "remediation_id", "applies_when_components", "profiles"],
         "properties": {
           "id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"},
+          "category": {"enum": ["OS", "ARCHITECTURE", "RUNTIME", "SERVICE", "CPU", "MEMORY", "STORAGE", "FILESYSTEM", "NETWORK", "TOOLING"]},
           "description": {"type": "string", "minLength": 1},
           "observation_path": {
-            "enum": [
-              "operating_system.family",
-              "operating_system.architecture",
-              "cpu.logical_cpu_count",
-              "memory.total_bytes",
-              "block_storage.status",
-              "block_storage.devices",
-              "filesystems.status",
-              "systemd.available",
-              "executables.git.present",
-              "runtimes.python.version",
-              "docker.cli.present",
-              "network.default_route.present"
-            ]
+            "type": ["string", "null"],
+            "enum": [null, "operating_system.family", "operating_system.version", "operating_system.architecture", "cpu.logical_cpu_count", "memory.total_bytes", "block_storage.status", "block_storage.devices", "filesystems.status", "systemd.available", "executables.git.present", "runtimes.python.version", "docker.cli.present", "services.docker.state", "network.default_route.present"]
           },
-          "comparison": {"enum": ["EQUALS", "VERSION_AT_LEAST", "NOT_YET_SPECIFIED"]},
+          "comparison": {"enum": ["EQUALS", "VERSION_AT_LEAST", "AT_LEAST", "DECISION_PENDING"]},
           "expected": {"type": ["string", "boolean", "number", "null"]},
+          "evidence_class": {"enum": ["ARCHITECTURE_REQUIRED", "IMPLEMENTATION_REQUIRED", "APPLICATION_REQUIRED", "RECOMMENDED", "HUMAN_DECISION_REQUIRED"]},
+          "evidence_source": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1},
+          "lifecycle": {"enum": ["HOST_RUNTIME", "KALVIN_EXECUTION", "BOOTSTRAP_TIME", "CURRENT_IMPLEMENTATION", "CAPACITY_POLICY", "COMPONENT_DERIVED"]},
+          "decision_state": {"enum": ["APPROVED", "PENDING"]},
+          "remediation_id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"},
+          "applies_when_components": {"type": "array", "items": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"}, "uniqueItems": true},
           "profiles": {
             "type": "object",
             "additionalProperties": false,
             "required": ["lab", "core", "storage"],
             "properties": {
-              "lab": {"enum": ["REQUIRED", "OPTIONAL", "NOT_YET_SPECIFIED", "NOT_APPLICABLE"]},
-              "core": {"enum": ["REQUIRED", "OPTIONAL", "NOT_YET_SPECIFIED", "NOT_APPLICABLE"]},
-              "storage": {"enum": ["REQUIRED", "OPTIONAL", "NOT_YET_SPECIFIED", "NOT_APPLICABLE"]}
+              "lab": {"enum": ["REQUIRED", "OPTIONAL", "RECOMMENDED", "NOT_APPLICABLE", "HUMAN_DECISION_REQUIRED"]},
+              "core": {"enum": ["REQUIRED", "OPTIONAL", "RECOMMENDED", "NOT_APPLICABLE", "HUMAN_DECISION_REQUIRED"]},
+              "storage": {"enum": ["REQUIRED", "OPTIONAL", "RECOMMENDED", "NOT_APPLICABLE", "HUMAN_DECISION_REQUIRED"]}
             }
           }
-        }
+        },
+        "allOf": [
+          {"if": {"properties": {"comparison": {"const": "DECISION_PENDING"}}}, "then": {"properties": {"expected": {"type": "null"}, "decision_state": {"const": "PENDING"}}}},
+          {"if": {"properties": {"comparison": {"const": "VERSION_AT_LEAST"}}}, "then": {"properties": {"expected": {"type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+)*$"}}}},
+          {"if": {"properties": {"comparison": {"const": "AT_LEAST"}}}, "then": {"properties": {"expected": {"type": "number"}}}}
+        ]
       }
     }
   }
