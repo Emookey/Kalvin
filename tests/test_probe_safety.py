@@ -22,6 +22,7 @@ from kalvin.probes import LocalProbeRunner, PROBE_ALLOWLIST, ProbeId, ProbeStatu
 
 ROOT = Path(__file__).resolve().parents[1]
 HOST_RUNTIME = tuple(sorted(ROOT.joinpath("kalvin").glob("host_*.py"))) + (
+    ROOT / "kalvin/drift.py",
     ROOT / "kalvin/probes.py",
     ROOT / "kalvin/preflight.py",
 )
