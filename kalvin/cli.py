@@ -85,7 +85,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         plan = resolve_plan(args.profile, args.lock, enabled_optional=args.enable)
         architecture, validation = validate_architecture()
         if architecture is None or not validation.valid:
-            raise UserInputError("Architecture became invalid before host preflight")
+            raise UserInputError("Architecture became invalid before host comparison")
         observed = HostInspector().inspect()
         if args.host_command == "drift":
             result = evaluate_host_drift(plan, observed, architecture.catalogs["host-requirements"])

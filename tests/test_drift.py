@@ -97,6 +97,23 @@ class DriftTests(unittest.TestCase):
         self.assertEqual((finding["result"], finding["severity"]), ("UNSATISFIED", "BLOCKING"))
         self.assertEqual(report["host_compliance"], "UNSATISFIED")
 
+    def test_required_service_inactive_is_unsatisfied_without_action(self) -> None:
+        policy = copy.deepcopy(self.policy)
+        docker = next(item for item in policy["requirements"] if item["id"] == "host.docker-requirement")
+        docker.update(
+            observation_path="services.docker.state",
+            expected="ACTIVE",
+            evidence_class="IMPLEMENTATION_REQUIRED",
+            decision_state="APPROVED",
+        )
+        docker["profiles"]["core"] = "REQUIRED"
+        observed = copy.deepcopy(self.observed)
+        observed["services"]["docker"]["state"] = "INACTIVE"
+        report = evaluate_host_drift(self.plan("core"), observed, policy)
+        finding = self.finding(report, "host.docker-requirement")
+        self.assertEqual((finding["result"], finding["severity"]), ("UNSATISFIED", "BLOCKING"))
+        self.assertEqual(finding["action_performed"], "NONE")
+
     def test_decision_pending_numeric_requirement(self) -> None:
         finding = self.finding(self.report("core"), "host.minimum-memory")
         self.assertEqual((finding["result"], finding["expected"]), ("DECISION_PENDING", None))
