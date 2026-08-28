@@ -425,7 +425,8 @@ def _validate_host_requirements(architecture: Architecture, result: ValidationRe
     for remediation in remediations:
         if remediation.get("action") != "NONE":
             result.add("POLICY ERROR", "automatic-remediation", remediation.get("id", "unknown"), "remediation action must remain NONE")
-        if any(pattern.search(remediation.get("guidance", "")) for pattern in shell_patterns):
+        guidance_values = [remediation.get("guidance", ""), *remediation.get("guidance_by_profile", {}).values()]
+        if any(pattern.search(guidance) for guidance in guidance_values for pattern in shell_patterns):
             result.add("POLICY ERROR", "executable-remediation", remediation.get("id", "unknown"), "remediation guidance must not contain executable shell")
 
     severity_policy = document["severity_policy"]

@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/host-requirements.schema.json",
   "schema_version": "2.0.0",
-  "policy_version": "1.0.0",
+  "policy_version": "1.0.1",
   "contract_status": "reference-architecture",
   "operational": false,
   "severity_policy": {
@@ -25,8 +25,25 @@
     {"id": "restore-mount-observation", "guidance": "Restore non-elevated, sanitized mount capability observation through an approved host-administration procedure.", "action": "NONE"},
     {"id": "review-default-route-policy", "guidance": "Review whether the selected profile and integrations require a default route; preserve offline or local-only designs where valid.", "action": "NONE"},
     {"id": "approve-cpu-sizing-method", "guidance": "Choose a component-derived CPU sizing method and validate workloads before approving an enforceable threshold.", "action": "NONE"},
-    {"id": "approve-memory-sizing-method", "guidance": "Choose a component and model workload-derived memory sizing method before approving an enforceable threshold.", "action": "NONE"},
-    {"id": "approve-core-capacity-method", "guidance": "Size Core local state and backup staging from selected applications and recovery workflow without making Core the retention authority.", "action": "NONE"},
+    {
+      "id": "approve-memory-sizing-method",
+      "guidance": "Choose a memory sizing method derived from the selected profile and component workload before approving an enforceable threshold.",
+      "guidance_by_profile": {
+        "lab": "Choose a memory sizing method derived from selected experimental components; include model workload only when model-runtime is selected.",
+        "core": "Choose a memory sizing method derived from Kal, Beepy, model-runtime when selected, and other selected Core components.",
+        "storage": "Choose a memory sizing method derived from selected Storage-role services, backup and retention workload, and filesystem and storage tooling."
+      },
+      "action": "NONE"
+    },
+    {
+      "id": "approve-local-capacity-method",
+      "guidance": "Choose a local-capacity sizing method derived from the selected profile and component working set before approving an enforceable threshold.",
+      "guidance_by_profile": {
+        "lab": "Size the Lab local experimental working set from the selected components before approving an enforceable threshold.",
+        "core": "Size Core application state and migration or backup staging from selected components and recovery workflow without making Core the retention authority."
+      },
+      "action": "NONE"
+    },
     {"id": "approve-storage-capacity-method", "guidance": "Size Storage from protected working sets, approved retention, replication, and safety margin before enforcing capacity.", "action": "NONE"},
     {"id": "approve-model-compute-contract", "guidance": "Derive compute requirements from the selected provider and model, then approve profile-specific CPU, memory, GPU, and VRAM policy.", "action": "NONE"}
   ],
@@ -122,17 +139,17 @@
     {
       "id": "host.minimum-memory", "category": "MEMORY", "description": "No evidence-backed physical-memory minimum exists.",
       "observation_path": "memory.total_bytes", "comparison": "DECISION_PENDING", "expected": null,
-      "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "No canonical application/model memory sizing contract exists.",
-      "reason": "Memory must be derived from selected applications and model runtime rather than one development host.",
+      "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "No canonical profile and selected-component memory sizing contract exists.",
+      "reason": "Memory must be derived from the selected profile and applicable component workloads rather than one development host.",
       "lifecycle": "CAPACITY_POLICY", "decision_state": "PENDING", "remediation_id": "approve-memory-sizing-method", "applies_when_components": [],
       "profiles": {"lab": "HUMAN_DECISION_REQUIRED", "core": "HUMAN_DECISION_REQUIRED", "storage": "HUMAN_DECISION_REQUIRED"}
     },
     {
-      "id": "host.minimum-storage-capacity", "category": "STORAGE", "description": "Core local application and backup-staging capacity has no approved numeric minimum.",
+      "id": "host.minimum-storage-capacity", "category": "STORAGE", "description": "Local selected-component working-set capacity has no approved numeric minimum.",
       "observation_path": "block_storage.devices", "comparison": "DECISION_PENDING", "expected": null,
-      "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "Selected application working sets and backup staging policy are not yet quantified.",
-      "reason": "Core capacity must not turn Core into the authoritative retention repository.",
-      "lifecycle": "CAPACITY_POLICY", "decision_state": "PENDING", "remediation_id": "approve-core-capacity-method", "applies_when_components": [],
+      "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "Selected profile component working sets and staging policy are not yet quantified.",
+      "reason": "Local capacity must reflect selected profile intent without assigning long-term retention authority to Core.",
+      "lifecycle": "CAPACITY_POLICY", "decision_state": "PENDING", "remediation_id": "approve-local-capacity-method", "applies_when_components": [],
       "profiles": {"lab": "HUMAN_DECISION_REQUIRED", "core": "HUMAN_DECISION_REQUIRED", "storage": "NOT_APPLICABLE"}
     },
     {

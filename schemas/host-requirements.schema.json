@@ -35,6 +35,16 @@
         "properties": {
           "id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"},
           "guidance": {"type": "string", "minLength": 1},
+          "guidance_by_profile": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "properties": {
+              "lab": {"type": "string", "minLength": 1},
+              "core": {"type": "string", "minLength": 1},
+              "storage": {"type": "string", "minLength": 1}
+            }
+          },
           "action": {"const": "NONE"}
         }
       }

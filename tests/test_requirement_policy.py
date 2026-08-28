@@ -75,6 +75,11 @@ class RequirementPolicySafetyTests(unittest.TestCase):
         self.policy["remediations"][0]["guidance"] = "systemctl restart synthetic.service"
         self.assertIn("executable-remediation", self.codes())
 
+    def test_executable_shell_in_profile_guidance_rejected(self) -> None:
+        remediation = next(item for item in self.policy["remediations"] if "guidance_by_profile" in item)
+        remediation["guidance_by_profile"]["storage"] = "systemctl restart synthetic.service"
+        self.assertIn("executable-remediation", self.codes())
+
     def test_automatic_fix_action_rejected(self) -> None:
         self.policy["remediations"][0]["action"] = "FIX"
         self.assertIn("schema-validation", self.codes())

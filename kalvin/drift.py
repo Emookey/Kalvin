@@ -21,6 +21,9 @@ REQUIREMENT_STATES = {
 DRIFT_RESULTS = {"SATISFIED", "UNSATISFIED", "UNKNOWN", "NOT_APPLICABLE", "DECISION_PENDING"}
 SEVERITIES = {"INFO", "WARNING", "BLOCKING"}
 OBSERVATION_STATUSES = {"OBSERVED", "UNAVAILABLE", "INSUFFICIENT_PERMISSION", "UNSUPPORTED", "UNKNOWN"}
+NOT_APPLICABLE_GUIDANCE = (
+    "No remediation is required for the selected profile and component set while this requirement is not applicable."
+)
 
 
 @dataclass(frozen=True)
@@ -94,6 +97,12 @@ def _remediations(policy: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {item["id"]: item for item in policy["remediations"]}
 
 
+def _guidance(remediation: dict[str, Any], profile: str, *, not_applicable: bool) -> str:
+    if not_applicable:
+        return NOT_APPLICABLE_GUIDANCE
+    return remediation.get("guidance_by_profile", {}).get(profile, remediation["guidance"])
+
+
 def requirement_by_id(policy: dict[str, Any], requirement_id: str) -> dict[str, Any]:
     for requirement in policy["requirements"]:
         if requirement["id"] == requirement_id:
@@ -135,7 +144,7 @@ def requirements_for_profile(
                 "currently_blocks_host_compliance": state == "REQUIRED",
                 "remediation": {
                     "id": remediation["id"],
-                    "guidance": remediation["guidance"],
+                    "guidance": _guidance(remediation, profile, not_applicable=state == "NOT_APPLICABLE"),
                     "action": "NONE",
                 },
             }
@@ -222,7 +231,11 @@ def _evaluate_requirement(
         "reason": requirement["reason"],
         "lifecycle": requirement["lifecycle"],
         "explanation": explanation,
-        "remediation": {"id": remediation["id"], "guidance": remediation["guidance"], "action": "NONE"},
+        "remediation": {
+            "id": remediation["id"],
+            "guidance": _guidance(remediation, profile, not_applicable=result == "NOT_APPLICABLE"),
+            "action": "NONE",
+        },
         "action_performed": "NONE",
     }
 

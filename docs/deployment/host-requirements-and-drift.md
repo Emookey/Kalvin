@@ -36,7 +36,7 @@ There is no apply, fix, repair, install, configure, service-control, output-file
 
 ## Policy contract
 
-`manifests/host-requirements.json` uses schema version `2.0.0` and policy version `1.0.0`. Requirement definitions live only there. Each records an ID, profile state, category, comparison/expected value, evidence class and source, rationale, lifecycle, decision state, component applicability, and one guidance-only remediation reference.
+`manifests/host-requirements.json` uses schema version `2.0.0` and policy version `1.0.1`. Requirement definitions live only there. Each records an ID, profile state, category, comparison/expected value, evidence class and source, rationale, lifecycle, decision state, component applicability, and one guidance-only remediation reference. Remediation definitions may provide profile-specific explanatory guidance without changing requirement semantics.
 
 Requirement states are:
 
@@ -84,7 +84,7 @@ Host compliance is `SATISFIED`, `UNSATISFIED`, or `UNKNOWN`. Drift status separa
 
 ## Remediation boundary
 
-Every remediation has an ID, plain-language guidance, and literal action `NONE`. Policy validation rejects shell-like executable guidance and any action other than `NONE`. The report repeats `DRIFT REPORT ONLY — NO CHANGES PERFORMED`.
+Every remediation has an ID, plain-language guidance, and literal action `NONE`. Guidance is selected for the active profile where a declarative override exists. A `NOT_APPLICABLE` result always explains that no remediation is required for the selected profile/component set. Policy validation rejects shell-like executable guidance, including profile overrides, and any action other than `NONE`. The report repeats `DRIFT REPORT ONLY — NO CHANGES PERFORMED`.
 
 Guidance is not authorization. It does not install packages, change services, alter containers, mount storage, configure networking, resolve secrets, or modify a host. Controlled remediation is a future, separately authorized design.
 
