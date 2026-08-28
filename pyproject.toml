@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kalvin-resolution-engine"
-version = "0.1.0"
-description = "Read-only declarative validation and resolution tooling for Kalvin"
+version = "0.2.0"
+description = "Read-only declarative resolution and local host preflight tooling for Kalvin"
 requires-python = ">=3.11"
 license = {text = "AGPL-3.0-or-later"}
 dependencies = ["jsonschema>=4.18,<5"]

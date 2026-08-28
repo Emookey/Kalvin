@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "observed-host.schema.json",
+  "title": "Kalvin sanitized local observed-host snapshot",
+  "description": "Ephemeral Phase 4E output; not desired state, a deployment record, or a public inventory artifact.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "operating_system", "cpu", "memory", "block_storage", "filesystems", "systemd", "services", "executables", "runtimes", "docker", "network"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "kind": {"const": "KALVIN_OBSERVED_HOST"},
+    "operating_system": {"type": "object"},
+    "cpu": {"type": "object"},
+    "memory": {"type": "object"},
+    "block_storage": {"type": "object"},
+    "filesystems": {"type": "object"},
+    "systemd": {"type": "object"},
+    "services": {"type": "object"},
+    "executables": {"type": "object"},
+    "runtimes": {"type": "object"},
+    "docker": {"type": "object"},
+    "network": {"type": "object"}
+  }
+}

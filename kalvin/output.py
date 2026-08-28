@@ -10,7 +10,7 @@ from .models import ValidationResult
 
 
 def stable_json(value: Any) -> str:
-    """Return canonical-enough stable JSON for repeatable Phase 4D plans."""
+    """Return stable JSON for repeatable plans and synthetic host snapshots."""
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
 
 
@@ -123,6 +123,51 @@ def plan_text(plan: dict[str, Any]) -> str:
             f"  Resolution: {plan['resolution_status']}",
             f"  Production readiness: {plan['production_readiness']}",
             "  Operational deployment: NONE (resolved plan only; no observed/deployed state)",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def observed_host_text(observed: dict[str, Any]) -> str:
+    """Render sanitized capability categories without raw probe output."""
+    lines = ["Observed host", "  Local observation only; no identity or addresses emitted"]
+    os_data = observed["operating_system"]
+    lines.extend(
+        [
+            "",
+            "Operating system",
+            f"  Status: {os_data['status']}",
+            f"  Family/version: {os_data['family'] or 'UNKNOWN'} / {os_data['version'] or 'UNKNOWN'}",
+            f"  Kernel/architecture: {os_data['kernel_release'] or 'UNKNOWN'} / {os_data['architecture'] or 'UNKNOWN'}",
+        ]
+    )
+    cpu, memory = observed["cpu"], observed["memory"]
+    lines.extend(
+        [
+            "",
+            "CPU and memory",
+            f"  CPU: {cpu['status']}; architecture {cpu['architecture'] or 'UNKNOWN'}; logical CPUs {cpu['logical_cpu_count'] if cpu['logical_cpu_count'] is not None else 'UNKNOWN'}",
+            f"  Memory: {memory['status']}; total bytes {memory['total_bytes'] if memory['total_bytes'] is not None else 'UNKNOWN'}",
+        ]
+    )
+    lines.extend(
+        [
+            "",
+            "Storage and mounts",
+            f"  Block storage: {observed['block_storage']['status']}; sanitized devices {len(observed['block_storage']['devices'])}",
+            f"  Filesystems: {observed['filesystems']['status']}; sanitized mounts {len(observed['filesystems']['mounts'])}",
+            "",
+            "Services and runtimes",
+            f"  systemd: {'AVAILABLE' if observed['systemd']['available'] else 'UNAVAILABLE'}",
+            f"  Docker CLI/service: {observed['docker']['cli']['status']} / {observed['docker']['service']['state']}",
+            f"  Python: {observed['runtimes']['python']['status']} / {observed['runtimes']['python']['version']}",
+            "",
+            "Network capability",
+            f"  Links: {observed['network']['status']}; sanitized interfaces {len(observed['network']['links'])}",
+            f"  Default route: {observed['network']['default_route']['status']} / {observed['network']['default_route']['present']}",
+            "",
+            "Result",
+            "  OBSERVED STATE ONLY; no desired state changed and no host action performed",
         ]
     )
     return "\n".join(lines) + "\n"

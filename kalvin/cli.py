@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Command-line contract for validation and resolution only."""
+"""Command-line contract for validation, resolution, and read-only host observation."""
 
 from __future__ import annotations
 
@@ -8,8 +8,9 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
+from .host_inspector import HostInspector
 from .models import UserInputError
-from .output import plan_text, stable_json, validation_json, validation_text
+from .output import observed_host_text, plan_text, stable_json, validation_json, validation_text
 from .resolver import resolve_plan
 from .validation import validate_architecture
 
@@ -22,7 +23,7 @@ EXIT_INTERNAL_FAILURE = 3
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m kalvin",
-        description="Validate Kalvin declarations and calculate secret-free resolved plans without changing a host.",
+        description="Validate declarations, resolve plans, and observe bounded local host capabilities without changing a host.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     validate = subparsers.add_parser("validate", help="validate declarative architecture contracts")
@@ -32,6 +33,10 @@ def build_parser() -> argparse.ArgumentParser:
     resolve.add_argument("--lock", required=True, type=Path, help="secret-free immutable repository/version lock JSON")
     resolve.add_argument("--enable", action="append", default=[], metavar="COMPONENT", help="explicitly select a default-off optional component (repeatable)")
     resolve.add_argument("--format", choices=("text", "json"), default="text", help="resolved-plan presentation (default: text)")
+    host = subparsers.add_parser("host", help="read-only local host observation and preflight")
+    host_commands = host.add_subparsers(dest="host_command", required=True)
+    inspect = host_commands.add_parser("inspect", help="emit a sanitized local observed-host snapshot")
+    inspect.add_argument("--format", choices=("text", "json"), default="text", help="observed-host presentation (default: text)")
     return parser
 
 
@@ -45,8 +50,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             stream = sys.stdout if result.valid else sys.stderr
             stream.write(rendered)
             return EXIT_SUCCESS if result.valid else EXIT_VALIDATION_FAILURE
-        plan = resolve_plan(args.profile, args.lock, enabled_optional=args.enable)
-        sys.stdout.write(stable_json(plan) if args.format == "json" else plan_text(plan))
+        if args.command == "resolve":
+            plan = resolve_plan(args.profile, args.lock, enabled_optional=args.enable)
+            sys.stdout.write(stable_json(plan) if args.format == "json" else plan_text(plan))
+            return EXIT_SUCCESS
+        observed = HostInspector().inspect()
+        sys.stdout.write(stable_json(observed) if args.format == "json" else observed_host_text(observed))
         return EXIT_SUCCESS
     except UserInputError as exc:
         sys.stderr.write(f"ERROR: {exc}\n")
