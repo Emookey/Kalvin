@@ -47,7 +47,7 @@ class DriftTests(unittest.TestCase):
     def test_lab_requirements_load(self) -> None:
         document = requirements_for_profile(self.policy, "lab")
         self.assertEqual(document["profile"], "lab")
-        self.assertEqual(document["requirement_policy_version"], "1.0.1")
+        self.assertEqual(document["requirement_policy_version"], "1.0.2")
 
     def test_core_requirements_load(self) -> None:
         states = {item["id"]: item["state"] for item in requirements_for_profile(self.policy, "core")["requirements"]}
@@ -370,6 +370,50 @@ class OperatorGuidanceTests(unittest.TestCase):
         plan["components"] = [item for item in plan["components"] if item["id"] != "model-runtime"]
         guidance = self.finding(evaluate_host_drift(plan, self.observed, self.policy), "host.minimum-memory")["remediation"]["guidance"]
         self.assertNotIn("model", guidance.lower())
+
+    def test_core_docker_decision_has_no_approved_expected_value(self) -> None:
+        finding = self.finding(self.report("core"), "host.docker-requirement")
+        self.assertEqual((finding["requirement_state"], finding["result"]), ("HUMAN_DECISION_REQUIRED", "DECISION_PENDING"))
+        self.assertEqual((finding["comparison"], finding["expected"]), ("DECISION_PENDING", None))
+
+    def test_storage_docker_decision_has_no_approved_expected_value(self) -> None:
+        finding = self.finding(self.report("storage"), "host.docker-requirement")
+        self.assertEqual((finding["requirement_state"], finding["result"]), ("HUMAN_DECISION_REQUIRED", "DECISION_PENDING"))
+        self.assertEqual((finding["comparison"], finding["expected"]), ("DECISION_PENDING", None))
+        self.assertNotIn("model", finding["remediation"]["guidance"].lower())
+
+    def test_lab_docker_optional_semantics_remain_concrete_and_unchanged(self) -> None:
+        requirement = next(
+            item for item in requirements_for_profile(self.policy, "lab")["requirements"]
+            if item["id"] == "host.docker-requirement"
+        )
+        self.assertEqual((requirement["state"], requirement["comparison"], requirement["expected"]), ("OPTIONAL", "EQUALS", True))
+
+    def test_no_numeric_sizing_threshold_is_introduced(self) -> None:
+        numeric_decisions = {
+            "host.minimum-logical-cpu",
+            "host.minimum-memory",
+            "host.minimum-storage-capacity",
+            "storage.retention-capacity",
+            "model-runtime.compute-capacity",
+        }
+        for profile in ("lab", "core", "storage"):
+            requirements = requirements_for_profile(self.policy, profile)["requirements"]
+            for item in requirements:
+                if item["id"] in numeric_decisions and item["state"] == "HUMAN_DECISION_REQUIRED":
+                    self.assertEqual((item["comparison"], item["expected"]), ("DECISION_PENDING", None))
+
+    def test_core_readiness_and_rag_gate_remain_external(self) -> None:
+        report = self.report("core")
+        self.assertEqual(report["production_readiness"], "BLOCKED_EXTERNAL_GATE")
+        gates = {item["id"]: item["status"] for item in report["external_readiness_summary"]["gates"]}
+        self.assertEqual(gates["kal.rag-status-durable"], "REQUIRED_EXTERNAL_UNVERIFIED")
+
+    def test_storage_compute_boundary_and_readiness_remain_unchanged(self) -> None:
+        report = self.report("storage")
+        self.assertFalse(set(report["resolved_plan_summary"]["components"]) & {"kal", "beepy", "model-runtime"})
+        self.assertEqual(self.finding(report, "model-runtime.compute-capacity")["result"], "NOT_APPLICABLE")
+        self.assertEqual(report["production_readiness"], "BLOCKED_EXTERNAL_GATE")
 
 
 if __name__ == "__main__":

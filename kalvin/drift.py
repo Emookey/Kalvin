@@ -123,6 +123,10 @@ def requirement_by_id(policy: dict[str, Any], requirement_id: str) -> dict[str, 
     raise UserInputError(f"Unknown host requirement {requirement_id!r}; available requirements: {available}")
 
 
+def _profile_policy_value(requirement: dict[str, Any], profile: str, key: str) -> Any:
+    return requirement.get("profile_overrides", {}).get(profile, {}).get(key, requirement[key])
+
+
 def requirements_for_profile(
     policy: dict[str, Any], profile: str, *, requirement_ids: Iterable[str] | None = None
 ) -> dict[str, Any]:
@@ -138,14 +142,16 @@ def requirements_for_profile(
     for item in sorted(selected, key=lambda requirement: requirement["id"]):
         remediation = remediation_by_id[item["remediation_id"]]
         state = item["profiles"][profile]
+        comparison = _profile_policy_value(item, profile, "comparison")
+        expected = _profile_policy_value(item, profile, "expected")
         requirements.append(
             {
                 "id": item["id"],
                 "category": item["category"],
                 "state": state,
                 "description": item["description"],
-                "comparison": item["comparison"],
-                "expected": item["expected"],
+                "comparison": comparison,
+                "expected": expected,
                 "observation_path": item["observation_path"],
                 "evidence_class": item["evidence_class"],
                 "evidence_source": item["evidence_source"],
@@ -193,6 +199,8 @@ def _evaluate_requirement(
     remediation_by_id: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
     state = requirement["profiles"][profile]
+    comparison = _profile_policy_value(requirement, profile, "comparison")
+    expected = _profile_policy_value(requirement, profile, "expected")
     component_scope = set(requirement["applies_when_components"])
     observation_status = "NOT_EVALUATED"
     observed_value: Any = None
@@ -200,7 +208,7 @@ def _evaluate_requirement(
     if state == "NOT_APPLICABLE" or (component_scope and not component_scope & selected_components):
         result = "NOT_APPLICABLE"
         explanation = "The requirement does not apply to the selected profile/component set."
-    elif state == "HUMAN_DECISION_REQUIRED" or requirement["comparison"] == "DECISION_PENDING":
+    elif state == "HUMAN_DECISION_REQUIRED" or comparison == "DECISION_PENDING":
         result = "DECISION_PENDING"
         explanation = "Architecture evidence is insufficient for enforcement; human approval is required."
     else:
@@ -213,11 +221,11 @@ def _evaluate_requirement(
             observed_value = None
             explanation = f"Observation evidence is {observation_status}; absence is not treated as false."
         else:
-            comparison = _compare(requirement["comparison"], observed_value, requirement["expected"])
-            if comparison is None:
+            comparison_result = _compare(comparison, observed_value, expected)
+            if comparison_result is None:
                 result = "UNKNOWN"
                 explanation = "Observed and expected values could not be compared safely."
-            elif comparison:
+            elif comparison_result:
                 result = "SATISFIED"
                 explanation = "Observed capability satisfies the declared policy."
             elif state == "OPTIONAL":
@@ -232,8 +240,8 @@ def _evaluate_requirement(
         "id": requirement["id"],
         "category": requirement["category"],
         "requirement_state": state,
-        "comparison": requirement["comparison"],
-        "expected": requirement["expected"],
+        "comparison": comparison,
+        "expected": expected,
         "observed_status": observation_status,
         "observed": observed_value,
         "result": result,

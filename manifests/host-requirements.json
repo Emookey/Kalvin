@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/host-requirements.schema.json",
   "schema_version": "2.0.0",
-  "policy_version": "1.0.1",
+  "policy_version": "1.0.2",
   "contract_status": "reference-architecture",
   "operational": false,
   "severity_policy": {
@@ -105,7 +105,11 @@
       "evidence_class": "HUMAN_DECISION_REQUIRED", "evidence_source": "Phase 4E observes Docker capability; Phase 4C/4D contain no operational container implementation",
       "reason": "Core and Storage runtime selection must be approved independently; Storage must not inherit Core compute assumptions.",
       "lifecycle": "CURRENT_IMPLEMENTATION", "decision_state": "PENDING", "remediation_id": "select-container-runtime-policy", "applies_when_components": [],
-      "profiles": {"lab": "OPTIONAL", "core": "HUMAN_DECISION_REQUIRED", "storage": "HUMAN_DECISION_REQUIRED"}
+      "profiles": {"lab": "OPTIONAL", "core": "HUMAN_DECISION_REQUIRED", "storage": "HUMAN_DECISION_REQUIRED"},
+      "profile_overrides": {
+        "core": {"comparison": "DECISION_PENDING", "expected": null},
+        "storage": {"comparison": "DECISION_PENDING", "expected": null}
+      }
     },
     {
       "id": "storage.block-inventory-observable", "category": "STORAGE", "description": "Storage must permit sanitized block-capability observation without elevation.",

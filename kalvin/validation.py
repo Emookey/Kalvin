@@ -447,8 +447,6 @@ def _validate_host_requirements(architecture: Architecture, result: ValidationRe
         result.add("POLICY ERROR", "optional-drift-blocking", "severity_policy", "optional capabilities may not block host compliance")
 
     for requirement in requirements:
-        comparison = requirement["comparison"]
-        expected = requirement["expected"]
         requirement_id = requirement["id"]
         states = set(requirement["profiles"].values())
         if states - REQUIREMENT_STATES:
@@ -458,18 +456,25 @@ def _validate_host_requirements(architecture: Architecture, result: ValidationRe
         path = requirement["observation_path"]
         if path is not None and path not in OBSERVATION_PATHS:
             result.add("CROSS-REFERENCE ERROR", "unknown-observed-capability", requirement_id, f"unknown observed capability {path!r}")
-        if comparison != "DECISION_PENDING" and path is None:
-            result.add("SEMANTIC ERROR", "missing-observed-capability", requirement_id, "concrete comparison requires an observation path")
-        if comparison == "DECISION_PENDING" and expected is not None:
-            result.add("POLICY ERROR", "decision-pending-threshold", requirement_id, "decision-pending requirement must not invent an expected value")
-        if comparison == "EQUALS" and expected is None:
-            result.add("SEMANTIC ERROR", "incompatible-expected-value", requirement_id, "EQUALS requires a concrete expected value")
-        if comparison == "VERSION_AT_LEAST" and _version_for_requirement(expected) is None:
-            result.add("SEMANTIC ERROR", "incompatible-expected-value", requirement_id, "VERSION_AT_LEAST requires a dotted numeric string")
-        if comparison == "AT_LEAST" and (isinstance(expected, bool) or not isinstance(expected, (int, float))):
-            result.add("SEMANTIC ERROR", "incompatible-expected-value", requirement_id, "AT_LEAST requires a numeric expected value")
         if "HUMAN_DECISION_REQUIRED" in states and requirement["decision_state"] != "PENDING":
             result.add("POLICY ERROR", "human-decision-marked-approved", requirement_id, "human-decision requirements must remain PENDING")
+        for profile, state in requirement["profiles"].items():
+            override = requirement.get("profile_overrides", {}).get(profile, {})
+            comparison = override.get("comparison", requirement["comparison"])
+            expected = override.get("expected", requirement["expected"])
+            location = f"{requirement_id}:{profile}"
+            if comparison != "DECISION_PENDING" and path is None:
+                result.add("SEMANTIC ERROR", "missing-observed-capability", location, "concrete comparison requires an observation path")
+            if comparison == "DECISION_PENDING" and expected is not None:
+                result.add("POLICY ERROR", "decision-pending-threshold", location, "decision-pending requirement must not invent an expected value")
+            if comparison == "EQUALS" and expected is None:
+                result.add("SEMANTIC ERROR", "incompatible-expected-value", location, "EQUALS requires a concrete expected value")
+            if comparison == "VERSION_AT_LEAST" and _version_for_requirement(expected) is None:
+                result.add("SEMANTIC ERROR", "incompatible-expected-value", location, "VERSION_AT_LEAST requires a dotted numeric string")
+            if comparison == "AT_LEAST" and (isinstance(expected, bool) or not isinstance(expected, (int, float))):
+                result.add("SEMANTIC ERROR", "incompatible-expected-value", location, "AT_LEAST requires a numeric expected value")
+            if state == "HUMAN_DECISION_REQUIRED" and (comparison != "DECISION_PENDING" or expected is not None):
+                result.add("POLICY ERROR", "resolved-human-decision-expectation", location, "human-decision requirement must keep comparison and expected value unresolved")
         for component_id in requirement["applies_when_components"]:
             if component_id not in component_ids:
                 result.add("CROSS-REFERENCE ERROR", "unknown-requirement-component", requirement_id, f"unknown component {component_id!r}")

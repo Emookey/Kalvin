@@ -90,6 +90,11 @@ class RequirementPolicySafetyTests(unittest.TestCase):
         remediation["guidance_by_component"]["synthetic-unknown"] = "Synthetic guidance only."
         self.assertIn("unknown-guidance-component", self.codes())
 
+    def test_human_decision_profile_override_cannot_set_expected_true(self) -> None:
+        docker = self.requirement("host.docker-requirement")
+        docker["profile_overrides"]["core"] = {"comparison": "EQUALS", "expected": True}
+        self.assertIn("resolved-human-decision-expectation", self.codes())
+
     def test_automatic_fix_action_rejected(self) -> None:
         self.policy["remediations"][0]["action"] = "FIX"
         self.assertIn("schema-validation", self.codes())

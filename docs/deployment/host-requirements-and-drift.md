@@ -36,7 +36,7 @@ There is no apply, fix, repair, install, configure, service-control, output-file
 
 ## Policy contract
 
-`manifests/host-requirements.json` uses schema version `2.0.0` and policy version `1.0.1`. Requirement definitions live only there. Each records an ID, profile state, category, comparison/expected value, evidence class and source, rationale, lifecycle, decision state, component applicability, and one guidance-only remediation reference. Remediation definitions may provide profile-specific explanatory guidance without changing requirement semantics.
+`manifests/host-requirements.json` uses schema version `2.0.0` and policy version `1.0.2`. Requirement definitions live only there. Each records an ID, profile state, category, comparison/expected value, evidence class and source, rationale, lifecycle, decision state, component applicability, and one guidance-only remediation reference. Remediation definitions may provide profile-specific explanatory guidance without changing requirement semantics. A narrowly scoped profile override may keep an optional concrete comparison for one profile while leaving another profile's human decision genuinely unspecified.
 
 Requirement states are:
 
@@ -54,7 +54,7 @@ The documented reconstruction contract supports Ubuntu Server as the initial pro
 
 x86_64 is the initial tested architecture. Core and Storage require it and Lab recommends it until another architecture has application/platform compatibility evidence. Python 3.11+ is required wherever Kalvin tooling runs. Git is required at bootstrap/version-management time on all profiles, not claimed as a steady-state application service dependency.
 
-systemd is recommended for the current Ubuntu-oriented design while its long-term platform status remains open. Docker is optional in Lab and decision-pending for Core and Storage because the repository has no operational container deployment implementation. Storage does not inherit a Docker requirement merely from Core's possible runtime selection.
+systemd is recommended for the current Ubuntu-oriented design while its long-term platform status remains open. Docker is optional in Lab with availability as the optional comparison. Core and Storage record Docker as decision-pending with no expected value because the decision is whether a container runtime is required at all; the repository has no operational container deployment implementation. Storage does not inherit a Docker requirement merely from Core's possible runtime selection.
 
 ## Profile differences
 

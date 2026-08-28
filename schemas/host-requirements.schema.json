@@ -4,6 +4,22 @@
   "title": "Kalvin evidence-backed profile host requirement policy",
   "type": "object",
   "additionalProperties": false,
+  "$defs": {
+    "profilePolicyOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comparison", "expected"],
+      "properties": {
+        "comparison": {"enum": ["EQUALS", "VERSION_AT_LEAST", "AT_LEAST", "DECISION_PENDING"]},
+        "expected": {"type": ["string", "boolean", "number", "null"]}
+      },
+      "allOf": [
+        {"if": {"properties": {"comparison": {"const": "DECISION_PENDING"}}}, "then": {"properties": {"expected": {"type": "null"}}}},
+        {"if": {"properties": {"comparison": {"const": "VERSION_AT_LEAST"}}}, "then": {"properties": {"expected": {"type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+)*$"}}}},
+        {"if": {"properties": {"comparison": {"const": "AT_LEAST"}}}, "then": {"properties": {"expected": {"type": "number"}}}}
+      ]
+    }
+  },
   "required": ["$schema", "schema_version", "policy_version", "contract_status", "operational", "severity_policy", "remediations", "requirements"],
   "properties": {
     "$schema": {"type": "string"},
@@ -79,6 +95,16 @@
           "decision_state": {"enum": ["APPROVED", "PENDING"]},
           "remediation_id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"},
           "applies_when_components": {"type": "array", "items": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"}, "uniqueItems": true},
+          "profile_overrides": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "properties": {
+              "lab": {"$ref": "#/$defs/profilePolicyOverride"},
+              "core": {"$ref": "#/$defs/profilePolicyOverride"},
+              "storage": {"$ref": "#/$defs/profilePolicyOverride"}
+            }
+          },
           "profiles": {
             "type": "object",
             "additionalProperties": false,
