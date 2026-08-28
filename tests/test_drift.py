@@ -108,6 +108,7 @@ class DriftTests(unittest.TestCase):
             decision_state="APPROVED",
         )
         docker["profiles"]["core"] = "REQUIRED"
+        docker["profile_overrides"]["core"] = {"comparison": "EQUALS", "expected": "ACTIVE"}
         observed = copy.deepcopy(self.observed)
         observed["services"]["docker"]["state"] = "INACTIVE"
         report = evaluate_host_drift(self.plan("core"), observed, policy)
