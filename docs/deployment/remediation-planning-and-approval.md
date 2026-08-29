@@ -49,7 +49,7 @@ Recommended or optional findings do not silently become mutation work. A drift-f
 
 | Contract | Version | Artifact |
 | --- | --- | --- |
-| remediation planning policy/action catalog | `1.0.0` | `manifests/remediation-actions.json` |
+| remediation planning policy/action catalog | `1.0.1` | `manifests/remediation-actions.json` |
 | action catalog schema | `1.0.0` | `schemas/remediation-action-catalog.schema.json` |
 | remediation plan schema/plan | `1.0.0` | `schemas/remediation-plan.schema.json` |
 | model approval record schema | `1.0.0` | `schemas/approval-record.schema.json` |
@@ -75,6 +75,14 @@ The initial catalog defines eleven declarative classes:
 | `MANUAL_ARCHITECTURE_DECISION` | governance | `LOW` | never; non-mutating |
 
 The catalog does not make any action executable. “Separate future policy required” is not approval and grants no present or future authority. Destructive formatting, destructive partition changes, authoritative-data deletion, backup-repository deletion, security-control disablement, destructive database reset, externally coordinated credential rotation, and arbitrary process execution are not automatic action classes and have no bypass.
+
+### Decision presentation versus future action identity
+
+A finding rule may carry a decision-only presentation in addition to its future mutation proposal. The decision ID and text answer which policy must be approved; the proposal ID and text answer what class of change could address drift after that policy is already approved. For action-capable rules these identities must differ.
+
+`host.docker-requirement` therefore uses `approve-container-runtime-policy` while the requirement is `DECISION_PENDING`. It asks whether the selected profile requires a container runtime and which supported policy is approved, and proposes no host mutation. The separate `provision-approved-container-runtime` action remains available only when a future requirement policy marks the capability `REQUIRED` and synthetic or approved observed evidence makes it `UNSATISFIED` and blocking.
+
+Local-capacity decisions are also profile-aware. Lab derives capacity from selected experimental components and its local experimental working set without importing production assumptions. Core derives capacity from application working set, migration/backup staging, and recovery workflow while long-term retention authority remains elsewhere. Storage uses its separate retention-capacity decision and does not inherit Core local-capacity or application-compute semantics.
 
 Application migrations remain owned and validated by their application. Kalvin may someday sequence an approved application contract but must not replace it with platform-authored data edits.
 

@@ -95,9 +95,13 @@ Phase 4E observes bounded, sanitized capability data on only the executing host 
 
 Phase 4F versions the evidence-backed profile requirement policy, establishes an initial Ubuntu-family/x86_64 support baseline, preserves unapproved numeric/model/runtime choices as human decisions, and reports deterministic drift with severity and descriptive remediation. It adds no probe and performs no action. Host compliance remains separate from external application/platform readiness.
 
-### Phase 4G — remediation planning and approval contract (current)
+### Phase 4G — remediation planning and approval contract (complete)
 
 Phase 4G classifies drift into minimized declarative mutation proposals, human policy decisions, or safe investigations. Plans bind resolved state, relevant sanitized drift, requirement policy, planning policy, and action definitions through deterministic fingerprints. Risk, scope, approval, preconditions, validation, rollback, and failure expectations are explicit. Approval records are synthetic/model-only and become stale when the exact plan or policy changes. Execution, rollback, approval persistence, and every host-mutation path remain absent.
+
+### Phase 4G.1 — decision/remediation semantic cleanup (current)
+
+Phase 4G.1 separates decision-only identity and operator wording from a finding rule's future mutation proposal. The unresolved Core/Storage container-runtime policy now asks for policy approval under `approve-container-runtime-policy`; `provision-approved-container-runtime` remains a distinct future action only for required, blocking, unsatisfied capability drift. Lab and Core local-capacity decisions use profile-specific working-set/recovery explanations, while Storage retains its separate retention boundary. Planning policy `1.0.1` changes no approval, risk, scope, rollback, failure, or no-execution contract.
 
 ### Later implementation gates
 

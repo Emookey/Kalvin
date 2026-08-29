@@ -173,16 +173,30 @@ def planning_policy_errors(
     requirement_ids = {item["id"] for item in requirement_policy["requirements"]}
     rule_requirements = [item["requirement_id"] for item in policy["finding_rules"]]
     proposal_ids = [item["proposal_id"] for item in policy["finding_rules"]]
+    decision_ids = [item["decision"]["id"] for item in policy["finding_rules"] if "decision" in item]
     for duplicate in sorted(item for item, count in Counter(rule_requirements).items() if count > 1):
         errors.append(("duplicate-finding-rule", duplicate, "requirement may have only one planning rule"))
     for duplicate in sorted(item for item, count in Counter(proposal_ids).items() if count > 1):
         errors.append(("duplicate-proposal-id", duplicate, "proposal IDs must be unique"))
+    for duplicate in sorted(item for item, count in Counter(decision_ids).items() if count > 1):
+        errors.append(("duplicate-decision-id", duplicate, "decision IDs must be unique"))
     proposal_id_set = set(proposal_ids)
     for rule in policy["finding_rules"]:
         if rule["requirement_id"] not in requirement_ids:
             errors.append(("unknown-rule-requirement", rule["requirement_id"], "no such host requirement"))
         if rule["disposition"] == "ACTION" and rule.get("action_class") not in action_id_set:
             errors.append(("unknown-action-class", rule["proposal_id"], str(rule.get("action_class"))))
+        if (
+            rule["disposition"] == "ACTION"
+            and rule.get("decision", {}).get("id") == rule["proposal_id"]
+        ):
+            errors.append(
+                (
+                    "decision-action-identity-collision",
+                    rule["proposal_id"],
+                    "policy decision ID must differ from the future mutation proposal ID",
+                )
+            )
         for dependency in rule.get("depends_on_proposals", []):
             if dependency not in proposal_id_set:
                 errors.append(("missing-rule-dependency", rule["proposal_id"], dependency))
@@ -253,6 +267,36 @@ def _classification(action_count: int, decision_count: int, investigation_count:
     if decision_count:
         return "DECISIONS_ONLY"
     return "DRIFT_FREE"
+
+
+def _decision_record(
+    rule: dict[str, Any] | None,
+    finding: dict[str, Any],
+    profile: str,
+) -> dict[str, Any]:
+    """Render policy-decision identity/text separately from a future action proposal."""
+    if rule is None:
+        decision_id = f"decide-{finding['id']}"
+        what = finding["remediation"]["guidance"]
+        why = finding["reason"]
+    else:
+        presentation = rule.get("decision", {})
+        decision_id = presentation.get("id", rule["proposal_id"])
+        what = presentation.get("summary_by_profile", {}).get(
+            profile, presentation.get("summary", rule["summary"])
+        )
+        why = presentation.get("why_by_profile", {}).get(
+            profile, presentation.get("why", finding["reason"])
+        )
+    return {
+        "id": decision_id,
+        "requirement_id": finding["id"],
+        "status": "HUMAN_POLICY_DECISION_REQUIRED",
+        "what": what,
+        "why": why,
+        "approval_class": "MANUAL_EXTERNAL_APPROVAL",
+        "host_mutation_proposed": False,
+    }
 
 
 def validate_action_graph(actions: list[dict[str, Any]]) -> None:
@@ -340,17 +384,7 @@ def generate_remediation_plan(
         rule = rules.get(finding["id"])
         if result == "DECISION_PENDING":
             planning_classification = "HUMAN_POLICY_DECISION_REQUIRED"
-            decisions.append(
-                {
-                    "id": rule["proposal_id"] if rule else f"decide-{finding['id']}",
-                    "requirement_id": finding["id"],
-                    "status": "HUMAN_POLICY_DECISION_REQUIRED",
-                    "what": rule["summary"] if rule else finding["remediation"]["guidance"],
-                    "why": finding["reason"],
-                    "approval_class": "MANUAL_EXTERNAL_APPROVAL",
-                    "host_mutation_proposed": False,
-                }
-            )
+            decisions.append(_decision_record(rule, finding, profile))
         elif result == "UNKNOWN":
             planning_classification = "INVESTIGATION_REQUIRED"
             investigations.append(
@@ -380,17 +414,7 @@ def generate_remediation_plan(
                 )
             elif rule["disposition"] == "HUMAN_POLICY_DECISION_REQUIRED":
                 planning_classification = "HUMAN_POLICY_DECISION_REQUIRED"
-                decisions.append(
-                    {
-                        "id": rule["proposal_id"],
-                        "requirement_id": finding["id"],
-                        "status": "HUMAN_POLICY_DECISION_REQUIRED",
-                        "what": rule["summary"],
-                        "why": finding["reason"],
-                        "approval_class": "MANUAL_EXTERNAL_APPROVAL",
-                        "host_mutation_proposed": False,
-                    }
-                )
+                decisions.append(_decision_record(rule, finding, profile))
             else:
                 action_class = classes[rule["action_class"]]
                 if not action_class["phase4g_may_plan"]:

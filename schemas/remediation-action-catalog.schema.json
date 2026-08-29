@@ -57,6 +57,7 @@
           "disposition": {"enum": ["ACTION", "HUMAN_POLICY_DECISION_REQUIRED"]},
           "action_class": {"type": "string"},
           "summary": {"type": "string", "minLength": 1},
+          "decision": {"$ref": "#/$defs/decisionPresentation"},
           "depends_on_proposals": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
         },
         "allOf": [
@@ -80,6 +81,28 @@
         "id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]+$"},
         "description": {"type": "string", "minLength": 1},
         "initial_state": {"enum": ["SATISFIED", "UNVERIFIED", "UNSATISFIED", "NOT_APPLICABLE"]}
+      }
+    },
+    "decisionPresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]+$"},
+        "summary": {"type": "string", "minLength": 1},
+        "why": {"type": "string", "minLength": 1},
+        "summary_by_profile": {"$ref": "#/$defs/profileText"},
+        "why_by_profile": {"$ref": "#/$defs/profileText"}
+      }
+    },
+    "profileText": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "lab": {"type": "string", "minLength": 1},
+        "core": {"type": "string", "minLength": 1},
+        "storage": {"type": "string", "minLength": 1}
       }
     }
   }

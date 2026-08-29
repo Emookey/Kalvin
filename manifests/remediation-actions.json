@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/remediation-action-catalog.schema.json",
   "schema_version": "1.0.0",
-  "policy_version": "1.0.0",
+  "policy_version": "1.0.1",
   "contract_status": "planning-only",
   "operational": false,
   "execution_available": false,
@@ -232,13 +232,40 @@
     {"requirement_id": "runtime.python-version", "proposal_id": "provision-approved-python-runtime", "disposition": "ACTION", "action_class": "PACKAGE_OR_RUNTIME_PROVISION", "summary": "Provision an approved Kalvin Python runtime in a future reviewed phase."},
     {"requirement_id": "capability.git", "proposal_id": "provision-approved-git-tooling", "disposition": "ACTION", "action_class": "PACKAGE_OR_RUNTIME_PROVISION", "summary": "Provision approved repository bootstrap tooling in a future reviewed phase."},
     {"requirement_id": "host.systemd-requirement", "proposal_id": "establish-approved-service-state", "disposition": "ACTION", "action_class": "SERVICE_STATE_CHANGE", "summary": "Establish the approved service-manager capability through a future dedicated service workflow."},
-    {"requirement_id": "host.docker-requirement", "proposal_id": "provision-approved-container-runtime", "disposition": "ACTION", "action_class": "PACKAGE_OR_RUNTIME_PROVISION", "summary": "Provision the profile-approved container runtime only after the requirement policy marks it REQUIRED."},
+    {
+      "requirement_id": "host.docker-requirement",
+      "proposal_id": "provision-approved-container-runtime",
+      "disposition": "ACTION",
+      "action_class": "PACKAGE_OR_RUNTIME_PROVISION",
+      "summary": "Provision the profile-approved container runtime only after the requirement policy marks it REQUIRED.",
+      "decision": {
+        "id": "approve-container-runtime-policy",
+        "summary": "Decide whether this profile requires a container runtime and approve the supported runtime policy.",
+        "why": "The container-runtime requirement has not yet been approved for this profile."
+      }
+    },
     {"requirement_id": "storage.block-inventory-observable", "proposal_id": "restore-block-observation-capability", "disposition": "ACTION", "action_class": "CONFIGURATION_CHANGE", "summary": "Restore bounded non-elevated block capability observation without disclosing device identity."},
     {"requirement_id": "storage.mount-inventory-observable", "proposal_id": "restore-mount-observation-capability", "disposition": "ACTION", "action_class": "CONFIGURATION_CHANGE", "summary": "Restore bounded sanitized mount capability observation without disclosing endpoints."},
     {"requirement_id": "network.default-route", "proposal_id": "review-network-capability", "disposition": "ACTION", "action_class": "NETWORK_CONFIGURATION_CHANGE", "summary": "Establish an approved network capability with management-path recovery protection."},
     {"requirement_id": "host.minimum-logical-cpu", "proposal_id": "approve-cpu-sizing-policy", "disposition": "HUMAN_POLICY_DECISION_REQUIRED", "summary": "Approve a workload-derived CPU sizing policy; do not infer a hardware upgrade."},
     {"requirement_id": "host.minimum-memory", "proposal_id": "approve-memory-sizing-policy", "disposition": "HUMAN_POLICY_DECISION_REQUIRED", "summary": "Approve a workload-derived memory sizing policy; do not infer a hardware upgrade."},
-    {"requirement_id": "host.minimum-storage-capacity", "proposal_id": "approve-local-capacity-policy", "disposition": "HUMAN_POLICY_DECISION_REQUIRED", "summary": "Approve the selected profile's local working-set and staging capacity policy."},
+    {
+      "requirement_id": "host.minimum-storage-capacity",
+      "proposal_id": "approve-local-capacity-policy",
+      "disposition": "HUMAN_POLICY_DECISION_REQUIRED",
+      "summary": "Approve the selected profile's local working-set and staging capacity policy.",
+      "decision": {
+        "id": "approve-local-capacity-policy",
+        "summary_by_profile": {
+          "lab": "Define Lab capacity from the selected experimental components and local experimental working set without importing production sizing assumptions.",
+          "core": "Define Core capacity from the application working set, migration and backup staging, and recovery workflow without making Core authoritative for long-term retention."
+        },
+        "why_by_profile": {
+          "lab": "Lab capacity must reflect its selected experimental components and local experimental working set without becoming a production sizing baseline.",
+          "core": "Core capacity must cover its application working set, migration and backup staging, and recovery workflow while long-term retention remains authoritative elsewhere."
+        }
+      }
+    },
     {"requirement_id": "storage.retention-capacity", "proposal_id": "approve-storage-retention-policy", "disposition": "HUMAN_POLICY_DECISION_REQUIRED", "summary": "Approve Storage retention, replication, protected working set, and safety margin policy."},
     {"requirement_id": "model-runtime.compute-capacity", "proposal_id": "approve-model-runtime-sizing-policy", "disposition": "HUMAN_POLICY_DECISION_REQUIRED", "summary": "Approve provider- and model-derived CPU, memory, GPU, and VRAM policy."}
   ]
