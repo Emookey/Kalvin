@@ -8,6 +8,7 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,6 +59,42 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("SCHEMA ERROR", result.stderr)
         self.assertNotIn("Traceback", result.stderr)
+
+    def test_host_help_lists_plan_but_no_execution_command(self) -> None:
+        result = run_cli("host", "--help")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("plan", result.stdout)
+        for command in ("apply", "execute", "fix", "repair", "rollback"):
+            self.assertNotIn(command, result.stdout)
+
+    def test_synthetic_host_plan_cli_is_planning_only(self) -> None:
+        observed = json.loads(
+            (ROOT / "tests/fixtures/synthetic-observed-host.json").read_text(encoding="utf-8")
+        )
+        from kalvin.cli import main
+
+        with patch("kalvin.cli.HostInspector.inspect", return_value=observed):
+            from contextlib import redirect_stderr, redirect_stdout
+            import io
+
+            output, error = io.StringIO(), io.StringIO()
+            with redirect_stdout(output), redirect_stderr(error):
+                exit_code = main(
+                    [
+                        "host",
+                        "plan",
+                        "--profile",
+                        "core",
+                        "--lock",
+                        str(ROOT / "tests/fixtures/synthetic-core.lock.json"),
+                        "--format",
+                        "json",
+                    ]
+                )
+        self.assertEqual(exit_code, 0, error.getvalue())
+        plan = json.loads(output.getvalue())
+        self.assertFalse(plan["execution_available"])
+        self.assertEqual(plan["action_count"], 0)
 
 
 if __name__ == "__main__":
