@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "approval-record.schema.json",
+  "title": "Kalvin model-only remediation approval record",
+  "description": "Synthetic contract only; it contains no credential, session, or real identity material.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "plan_fingerprint", "plan_policy_version", "approval_class", "approver_role_type", "decision", "state", "scope", "constraints", "validity", "reason", "synthetic_model_only"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "kind": {"const": "KALVIN_REMEDIATION_APPROVAL_RECORD"},
+    "plan_fingerprint": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "plan_policy_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "approval_class": {"enum": ["OPERATOR_APPROVAL", "ELEVATED_OPERATOR_APPROVAL", "MANUAL_EXTERNAL_APPROVAL", "PROHIBITED_AUTOMATICALLY"]},
+    "approver_role_type": {"enum": ["OPERATOR", "ELEVATED_OPERATOR", "EXTERNAL_AUTHORITY", "SYNTHETIC_TEST_ROLE"]},
+    "decision": {"enum": ["APPROVE", "DENY"]},
+    "state": {"enum": ["APPROVED", "DENIED", "EXPIRED", "STALE"]},
+    "scope": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+    "constraints": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "validity": {
+      "type": "object", "additionalProperties": false, "required": ["mode", "expires_at"],
+      "properties": {"mode": {"enum": ["UNTIL_STATE_CHANGE", "SINGLE_USE", "EXPIRES"]}, "expires_at": {"type": ["string", "null"]}}
+    },
+    "reason": {"type": "string"},
+    "synthetic_model_only": {"const": true}
+  }
+}
