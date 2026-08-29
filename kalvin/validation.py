@@ -15,6 +15,7 @@ from .drift import OBSERVATION_PATHS, REQUIREMENT_STATES, SEVERITIES
 from .graph import find_cycle
 from .loader import load_architecture
 from .models import Architecture, ValidationResult
+from .remediation import planning_policy_errors
 
 
 EXPECTED_PROFILES = {"lab", "core", "storage"}
@@ -497,6 +498,11 @@ def validate_bundle(architecture: Architecture) -> ValidationResult:
     _validate_profiles(architecture, result)
     _validate_policy(architecture, result)
     _validate_host_requirements(architecture, result)
+    for code, location, message in planning_policy_errors(
+        architecture.catalogs["remediation-actions"],
+        architecture.catalogs["host-requirements"],
+    ):
+        result.add("POLICY ERROR", code, f"manifests/remediation-actions.json:{location}", message)
     return result
 
 

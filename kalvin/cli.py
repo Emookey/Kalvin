@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Command-line contract for validation, resolution, and read-only host observation."""
+"""Command-line contract for validation, read-only observation, and planning."""
 
 from __future__ import annotations
 
@@ -11,8 +11,9 @@ from typing import Sequence
 from .drift import evaluate_host_drift, requirements_for_profile
 from .host_inspector import HostInspector
 from .models import UserInputError
-from .output import drift_text, observed_host_text, plan_text, preflight_text, requirements_text, stable_json, validation_json, validation_text
+from .output import drift_text, observed_host_text, plan_text, preflight_text, remediation_plan_text, requirements_text, stable_json, validation_json, validation_text
 from .preflight import compare_preflight
+from .remediation import generate_remediation_plan
 from .resolver import resolve_plan
 from .validation import validate_architecture
 
@@ -27,7 +28,7 @@ EXIT_UNKNOWN_HOST_COMPLIANCE = 5
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m kalvin",
-        description="Validate declarations, resolve plans, and observe bounded local host capabilities without changing a host.",
+        description="Validate, resolve, observe, compare, and plan without changing a host.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     validate = subparsers.add_parser("validate", help="validate declarative architecture contracts")
@@ -54,6 +55,13 @@ def build_parser() -> argparse.ArgumentParser:
     drift.add_argument("--lock", required=True, type=Path, help="secret-free immutable repository/version lock JSON")
     drift.add_argument("--enable", action="append", default=[], metavar="COMPONENT", help="explicitly select a default-off optional component (repeatable)")
     drift.add_argument("--format", choices=("text", "json"), default="text", help="drift-report presentation (default: text)")
+    remediation_plan = host_commands.add_parser(
+        "plan", help="produce a deterministic remediation plan; execution is unavailable"
+    )
+    remediation_plan.add_argument("--profile", required=True, help="profile ID: lab, core, or storage")
+    remediation_plan.add_argument("--lock", required=True, type=Path, help="secret-free immutable repository/version lock JSON")
+    remediation_plan.add_argument("--enable", action="append", default=[], metavar="COMPONENT", help="explicitly select a default-off optional component (repeatable)")
+    remediation_plan.add_argument("--format", choices=("text", "json"), default="text", help="remediation-plan presentation (default: text)")
     return parser
 
 
@@ -87,6 +95,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         if architecture is None or not validation.valid:
             raise UserInputError("Architecture became invalid before host comparison")
         observed = HostInspector().inspect()
+        if args.host_command == "plan":
+            drift_report = evaluate_host_drift(
+                plan, observed, architecture.catalogs["host-requirements"]
+            )
+            result = generate_remediation_plan(
+                plan,
+                drift_report,
+                architecture.catalogs["host-requirements"],
+                architecture.catalogs["remediation-actions"],
+                plan_schema=architecture.schemas["remediation-plan.schema.json"],
+            )
+            sys.stdout.write(stable_json(result) if args.format == "json" else remediation_plan_text(result))
+            return EXIT_SUCCESS
         if args.host_command == "drift":
             result = evaluate_host_drift(plan, observed, architecture.catalogs["host-requirements"])
             sys.stdout.write(stable_json(result) if args.format == "json" else drift_text(result))

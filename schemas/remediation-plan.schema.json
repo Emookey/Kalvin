@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "remediation-plan.schema.json",
+  "title": "Kalvin deterministic remediation plan",
+  "description": "Planning and approval requirements only; this document is never executable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "plan_version", "plan_policy_version", "profile", "source_policy_version", "source_resolved_plan_identity", "source_drift_identity", "plan_id", "plan_fingerprint", "created_from_state_classification", "plan_status", "findings", "action_count", "decision_count", "investigation_count", "actions", "decisions", "investigations", "action_dependencies", "risk", "scope", "approval_requirements", "preconditions", "validation", "rollback", "blocking_conditions", "external_readiness", "execution_available", "execution_status", "notice"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "kind": {"const": "KALVIN_REMEDIATION_PLAN"},
+    "plan_version": {"const": "1.0.0"},
+    "plan_policy_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "profile": {"enum": ["lab", "core", "storage"]},
+    "source_policy_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "source_resolved_plan_identity": {"$ref": "#/$defs/fingerprint"},
+    "source_drift_identity": {"$ref": "#/$defs/fingerprint"},
+    "plan_id": {"type": "string", "pattern": "^remediation-plan-sha256-[0-9a-f]{64}$"},
+    "plan_fingerprint": {"$ref": "#/$defs/fingerprint"},
+    "created_from_state_classification": {"enum": ["DRIFT_FREE", "ACTIONABLE_DRIFT", "EVIDENCE_INCOMPLETE", "DECISIONS_ONLY", "MIXED"]},
+    "plan_status": {"enum": ["NO_ACTIONS_REQUIRED", "PLAN_GENERATED", "PLAN_BLOCKED"]},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requirement_id", "drift_result", "severity", "planning_classification"],
+        "properties": {
+          "requirement_id": {"type": "string"},
+          "drift_result": {"enum": ["SATISFIED", "UNSATISFIED", "UNKNOWN", "NOT_APPLICABLE", "DECISION_PENDING"]},
+          "severity": {"enum": ["INFO", "WARNING", "BLOCKING"]},
+          "planning_classification": {"enum": ["NO_REMEDIATION", "REMEDIATION_PROPOSED", "HUMAN_POLICY_DECISION_REQUIRED", "INVESTIGATION_REQUIRED", "BLOCKED_NO_RULE"]}
+        }
+      }
+    },
+    "action_count": {"type": "integer", "minimum": 0},
+    "decision_count": {"type": "integer", "minimum": 0},
+    "investigation_count": {"type": "integer", "minimum": 0},
+    "actions": {"type": "array", "items": {"$ref": "#/$defs/action"}},
+    "decisions": {"type": "array", "items": {"$ref": "#/$defs/decision"}},
+    "investigations": {"type": "array", "items": {"$ref": "#/$defs/investigation"}},
+    "action_dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["action_id", "depends_on"],
+        "properties": {"action_id": {"type": "string"}, "depends_on": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}}
+      }
+    },
+    "risk": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["action_id", "class", "basis"], "properties": {"action_id": {"type": "string"}, "class": {"enum": ["LOW", "MODERATE", "HIGH", "CRITICAL"]}, "basis": {"type": "string"}}}},
+    "scope": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["action_id", "classes", "affected_domain"], "properties": {"action_id": {"type": "string"}, "classes": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true}, "affected_domain": {"type": "string"}}}},
+    "approval_requirements": {"type": "array", "items": {"$ref": "#/$defs/approvalRequirement"}},
+    "preconditions": {"type": "array", "items": {"$ref": "#/$defs/precondition"}},
+    "validation": {"type": "array", "items": {"$ref": "#/$defs/validationExpectation"}},
+    "rollback": {"type": "array", "items": {"$ref": "#/$defs/rollbackExpectation"}},
+    "blocking_conditions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "status", "reason"], "properties": {"id": {"type": "string"}, "status": {"enum": ["ACTIVE", "CLEARED"]}, "reason": {"type": "string"}}}},
+    "external_readiness": {
+      "type": "object", "additionalProperties": false, "required": ["classification", "gates"],
+      "properties": {
+        "classification": {"const": "EXTERNAL_NOT_HOST_REMEDIATION"},
+        "gates": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "status"], "properties": {"id": {"type": "string"}, "status": {"type": "string"}}}}
+      }
+    },
+    "execution_available": {"const": false},
+    "execution_status": {"const": "NOT_IMPLEMENTED"},
+    "notice": {"const": "REMEDIATION PLAN ONLY — EXECUTION NOT AVAILABLE — NO CHANGES PERFORMED"}
+  },
+  "$defs": {
+    "fingerprint": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "action": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source_finding_ids", "action_class", "action_definition_fingerprint", "affected_domain", "mutation_class", "what", "why", "risk", "scopes", "approval", "preconditions", "validation", "rollback", "failure_behavior", "depends_on", "future_automatic_execution", "execution_available"],
+      "properties": {
+        "id": {"type": "string"}, "source_finding_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+        "action_class": {"type": "string"}, "action_definition_fingerprint": {"$ref": "#/$defs/fingerprint"}, "affected_domain": {"type": "string"},
+        "mutation_class": {"enum": ["HOST_MUTATION", "APPLICATION_MUTATION", "EXTERNAL_MUTATION"]},
+        "what": {"type": "string"}, "why": {"type": "string"}, "risk": {"enum": ["LOW", "MODERATE", "HIGH", "CRITICAL"]},
+        "scopes": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+        "approval": {"$ref": "#/$defs/approvalRequirement"},
+        "preconditions": {"type": "array", "items": {"$ref": "#/$defs/embeddedExpectation"}, "minItems": 1},
+        "validation": {"type": "array", "items": {"$ref": "#/$defs/embeddedExpectation"}, "minItems": 1},
+        "rollback": {"type": "object", "additionalProperties": false, "required": ["class", "status", "expectation"], "properties": {"class": {"type": "string"}, "status": {"enum": ["UNVERIFIED", "NOT_APPLICABLE"]}, "expectation": {"type": "string"}}},
+        "failure_behavior": {"enum": ["STOP", "ROLLBACK_REQUIRED", "MANUAL_RECOVERY_REQUIRED", "REASSESS_REQUIRED"]},
+        "depends_on": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "future_automatic_execution": {"enum": ["NEVER", "REQUIRES_SEPARATE_FUTURE_POLICY"]},
+        "execution_available": {"const": false}
+      }
+    },
+    "approvalRequirement": {
+      "type": "object", "additionalProperties": false, "required": ["action_id", "classes", "state", "plan_binding"],
+      "properties": {"action_id": {"type": "string"}, "classes": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true}, "state": {"const": "REQUIRED"}, "plan_binding": {"const": "EXACT_PLAN_FINGERPRINT_REQUIRED"}}
+    },
+    "embeddedExpectation": {
+      "type": "object", "additionalProperties": false, "required": ["id", "description", "state"],
+      "properties": {"id": {"type": "string"}, "description": {"type": "string"}, "state": {"enum": ["SATISFIED", "UNVERIFIED", "UNSATISFIED", "NOT_APPLICABLE"]}}
+    },
+    "precondition": {
+      "type": "object", "additionalProperties": false, "required": ["action_id", "id", "description", "state"],
+      "properties": {"action_id": {"type": "string"}, "id": {"type": "string"}, "description": {"type": "string"}, "state": {"enum": ["SATISFIED", "UNVERIFIED", "UNSATISFIED", "NOT_APPLICABLE"]}}
+    },
+    "validationExpectation": {
+      "type": "object", "additionalProperties": false, "required": ["action_id", "id", "description", "state"],
+      "properties": {"action_id": {"type": "string"}, "id": {"type": "string"}, "description": {"type": "string"}, "state": {"enum": ["SATISFIED", "UNVERIFIED", "UNSATISFIED", "NOT_APPLICABLE"]}}
+    },
+    "rollbackExpectation": {
+      "type": "object", "additionalProperties": false, "required": ["action_id", "class", "status", "expectation"],
+      "properties": {"action_id": {"type": "string"}, "class": {"type": "string"}, "status": {"enum": ["UNVERIFIED", "NOT_APPLICABLE"]}, "expectation": {"type": "string"}}
+    },
+    "decision": {
+      "type": "object", "additionalProperties": false, "required": ["id", "requirement_id", "status", "what", "why", "approval_class", "host_mutation_proposed"],
+      "properties": {"id": {"type": "string"}, "requirement_id": {"type": "string"}, "status": {"const": "HUMAN_POLICY_DECISION_REQUIRED"}, "what": {"type": "string"}, "why": {"type": "string"}, "approval_class": {"const": "MANUAL_EXTERNAL_APPROVAL"}, "host_mutation_proposed": {"const": false}}
+    },
+    "investigation": {
+      "type": "object", "additionalProperties": false, "required": ["id", "requirement_id", "status", "missing_evidence", "safe_observation_required", "trust_boundary_approval", "host_mutation_proposed"],
+      "properties": {"id": {"type": "string"}, "requirement_id": {"type": "string"}, "status": {"const": "INVESTIGATION_REQUIRED"}, "missing_evidence": {"type": "string"}, "safe_observation_required": {"type": "string"}, "trust_boundary_approval": {"enum": ["NO_APPROVAL_NEEDED", "MANUAL_EXTERNAL_APPROVAL"]}, "host_mutation_proposed": {"const": false}}
+    }
+  }
+}

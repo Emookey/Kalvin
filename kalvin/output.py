@@ -299,3 +299,95 @@ def _drift_guidance_label(result: str) -> str:
         "UNKNOWN": "Investigation guidance",
         "UNSATISFIED": "Suggested remediation",
     }[result]
+
+
+def remediation_plan_text(plan: dict[str, Any]) -> str:
+    """Render an operator review document without executable detail."""
+    lines = [
+        "REMEDIATION PLAN ONLY",
+        "EXECUTION NOT AVAILABLE",
+        "NO CHANGES PERFORMED",
+        "",
+        "Plan identity",
+        f"  Profile: {plan['profile']}",
+        f"  Fingerprint: {plan['plan_fingerprint']}",
+        f"  Planning policy: {plan['plan_policy_version']}",
+        f"  Requirement policy: {plan['source_policy_version']}",
+        f"  Status: {plan['plan_status']}",
+        "",
+        "Summary",
+        f"  Findings requiring mutation proposals: {plan['action_count']}",
+        f"  Human policy decisions: {plan['decision_count']}",
+        f"  Investigations: {plan['investigation_count']}",
+    ]
+    if not plan["actions"]:
+        lines.extend(["", "Proposed actions", "  NO ACTIONS REQUIRED"])
+    for action in plan["actions"]:
+        lines.extend(
+            [
+                "",
+                f"Proposed action: {action['id']}",
+                f"  WHAT: {action['what']}",
+                f"  WHY: {action['why']}",
+                f"  RISK: {action['risk']}",
+                f"  WHAT COULD BE AFFECTED: {', '.join(action['scopes'])}",
+                f"  APPROVAL REQUIRED: {', '.join(action['approval']['classes'])} ({action['approval']['state']})",
+                "  WHAT MUST BE TRUE FIRST:",
+            ]
+        )
+        lines.extend(
+            f"    - {item['id']}: {item['state']} — {item['description']}"
+            for item in action["preconditions"]
+        )
+        lines.append("  HOW SUCCESS WOULD BE CHECKED:")
+        lines.extend(
+            f"    - {item['id']}: {item['state']} — {item['description']}"
+            for item in action["validation"]
+        )
+        lines.extend(
+            [
+                f"  HOW RECOVERY WOULD WORK: {action['rollback']['class']} / {action['rollback']['status']}",
+                f"    {action['rollback']['expectation']}",
+                f"  FAILURE RESPONSE: {action['failure_behavior']}",
+                "  EXECUTION: NOT AVAILABLE",
+            ]
+        )
+    lines.extend(["", "Human decisions"])
+    if not plan["decisions"]:
+        lines.append("  - None")
+    for decision in plan["decisions"]:
+        lines.extend(
+            [
+                f"  - {decision['requirement_id']}: {decision['status']}",
+                f"    WHAT: {decision['what']}",
+                f"    WHY: {decision['why']}",
+                "    Host mutation proposed: NO",
+            ]
+        )
+    lines.extend(["", "Investigations"])
+    if not plan["investigations"]:
+        lines.append("  - None")
+    for investigation in plan["investigations"]:
+        lines.extend(
+            [
+                f"  - {investigation['requirement_id']}: {investigation['status']}",
+                f"    Missing evidence: {investigation['missing_evidence']}",
+                f"    Safe observation: {investigation['safe_observation_required']}",
+                "    Host mutation proposed: NO",
+            ]
+        )
+    lines.extend(["", "External readiness (not host remediation)"])
+    if not plan["external_readiness"]["gates"]:
+        lines.append("  - None")
+    for gate in plan["external_readiness"]["gates"]:
+        lines.append(f"  - {gate['id']}: {gate['status']}")
+    lines.extend(
+        [
+            "",
+            "Result",
+            f"  {plan['plan_status']}",
+            "  EXECUTION NOT AVAILABLE",
+            "  NO CHANGES PERFORMED",
+        ]
+    )
+    return "\n".join(lines) + "\n"

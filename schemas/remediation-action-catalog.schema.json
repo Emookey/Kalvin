@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "remediation-action-catalog.schema.json",
+  "title": "Kalvin declarative remediation planning policy and action catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schema_version", "policy_version", "contract_status", "operational", "execution_available", "risk_classes", "scope_classes", "approval_classes", "approval_states", "precondition_states", "rollback_classes", "failure_classes", "action_classes", "finding_rules"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schema_version": {"const": "1.0.0"},
+    "policy_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "contract_status": {"const": "planning-only"},
+    "operational": {"const": false},
+    "execution_available": {"const": false},
+    "risk_classes": {"type": "array", "items": {"$ref": "#/$defs/namedDescription"}, "minItems": 4},
+    "scope_classes": {"type": "array", "items": {"$ref": "#/$defs/namedDescription"}, "minItems": 1},
+    "approval_classes": {"type": "array", "items": {"$ref": "#/$defs/namedDescription"}, "minItems": 1},
+    "approval_states": {"type": "array", "items": {"$ref": "#/$defs/namedDescription"}, "minItems": 1},
+    "precondition_states": {"type": "array", "items": {"$ref": "#/$defs/namedDescription"}, "minItems": 1},
+    "rollback_classes": {"type": "array", "items": {"$ref": "#/$defs/namedDescription"}, "minItems": 1},
+    "failure_classes": {"type": "array", "items": {"$ref": "#/$defs/namedDescription"}, "minItems": 1},
+    "action_classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "affected_domain", "mutation_class", "description", "default_risk", "scopes", "required_approval_classes", "preconditions", "validation_expectations", "rollback_class", "rollback_expectation", "failure_behavior", "phase4g_may_plan", "future_automatic_execution"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
+          "affected_domain": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
+          "mutation_class": {"enum": ["HOST_MUTATION", "APPLICATION_MUTATION", "EXTERNAL_MUTATION", "NON_MUTATING_DECISION"]},
+          "description": {"type": "string", "minLength": 1},
+          "default_risk": {"enum": ["LOW", "MODERATE", "HIGH", "CRITICAL"]},
+          "scopes": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+          "required_approval_classes": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+          "preconditions": {"type": "array", "items": {"$ref": "#/$defs/expectation"}, "minItems": 1},
+          "validation_expectations": {"type": "array", "items": {"$ref": "#/$defs/expectation"}, "minItems": 1},
+          "rollback_class": {"type": "string"},
+          "rollback_expectation": {"type": "string", "minLength": 1},
+          "failure_behavior": {"type": "string"},
+          "phase4g_may_plan": {"type": "boolean"},
+          "future_automatic_execution": {"enum": ["NEVER", "REQUIRES_SEPARATE_FUTURE_POLICY"]}
+        }
+      }
+    },
+    "finding_rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requirement_id", "proposal_id", "disposition", "summary"],
+        "properties": {
+          "requirement_id": {"type": "string"},
+          "proposal_id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]+$"},
+          "disposition": {"enum": ["ACTION", "HUMAN_POLICY_DECISION_REQUIRED"]},
+          "action_class": {"type": "string"},
+          "summary": {"type": "string", "minLength": 1},
+          "depends_on_proposals": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        },
+        "allOf": [
+          {"if": {"properties": {"disposition": {"const": "ACTION"}}}, "then": {"required": ["action_class"]}}
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "namedDescription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description"],
+      "properties": {"id": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"}, "description": {"type": "string", "minLength": 1}}
+    },
+    "expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "initial_state"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]+$"},
+        "description": {"type": "string", "minLength": 1},
+        "initial_state": {"enum": ["SATISFIED", "UNVERIFIED", "UNSATISFIED", "NOT_APPLICABLE"]}
+      }
+    }
+  }
+}
