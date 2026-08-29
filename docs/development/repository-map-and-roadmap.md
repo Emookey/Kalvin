@@ -1,6 +1,6 @@
 # Repository Map and Roadmap
 
-Status: **CURRENT Phase 4F read-only host requirements/drift and PLANNED later implementation sequence.**
+Status: **CURRENT Phase 4G remediation planning/approval contract and PLANNED later implementation sequence.**
 
 ## Current repository map
 
@@ -23,6 +23,7 @@ manifests/
   compatibility.json            # zero implicit aliases; future entry contract
   components.json               # component/dependency/state catalog
   host-requirements.json        # versioned evidence, profile policy, severity, guidance
+  remediation-actions.json      # planning-only action catalog, risk, approval, recovery policy
   readiness-gates.json          # health/readiness vocabulary and ownership
   repositories.json             # independent repository and pinning policy
   vocabularies.json              # state, backup, exposure, privilege vocabulary
@@ -33,6 +34,9 @@ schemas/
   host-preflight.schema.json
   host-drift.schema.json
   host-requirements.schema.json
+  remediation-action-catalog.schema.json
+  remediation-plan.schema.json
+  approval-record.schema.json
   observed-host.schema.json
   desired-deployment.schema.json
   readiness-gates.schema.json
@@ -42,7 +46,7 @@ schemas/
   resolved-deployment-record.schema.json
   vocabularies.schema.json
 kalvin/
-  cli.py                         # validate/resolve/inspect/requirements/drift contract
+  cli.py                         # validate/resolve/inspect/requirements/drift/plan contract
   loader.py                      # constrained JSON input loading
   validation.py                  # schema, semantic, reference, policy checks
   graph.py                       # stable dependency analysis
@@ -53,6 +57,7 @@ kalvin/
   host_parsers.py                # pure parsers and identity sanitizers
   host_inspector.py              # ephemeral local observed-host assembly
   drift.py                       # pure requirement selection and drift evaluation
+  remediation.py                 # pure planning, fingerprints, graph, approval/stale semantics
   preflight.py                   # retained Phase 4E compatibility view
 tests/
   README.md
@@ -68,11 +73,11 @@ Every current directory contains a useful artifact. `deploy/`, `manifests/`, and
 | Path | Responsibility |
 | --- | --- |
 | `deploy/profiles/` | Exactly three primary host-role intent contracts with component, readiness, backup, exposure, and compatibility policy |
-| `manifests/` | Shared catalogs and controlled vocabulary independent of a runtime engine |
-| `schemas/` | Syntax contracts for current catalogs/profiles and future desired/resolved deployment records |
+| `manifests/` | Shared catalogs, host policy, and non-operational remediation action policy |
+| `schemas/` | Syntax contracts for catalogs/profiles, resolved state, plans, and model approvals |
 | `docs/` | Human-readable architecture, ownership, lifecycle, migration, and operations policy |
-| `kalvin/` | Declaration validation, deterministic resolution, bounded local inspection, pure requirements/drift comparison, and presentation |
-| `tests/` | Isolated positive, negative, CLI, parser, determinism, privacy, and mutation-boundary validation |
+| `kalvin/` | Declaration validation, deterministic resolution, bounded local inspection, pure requirements/drift comparison, planning, approval binding semantics, and presentation |
+| `tests/` | Isolated positive, negative, CLI, parser, determinism, staleness, graph, privacy, and mutation-boundary validation |
 
 Create a future top-level directory only with its first reviewed artifact. There is no `scripts/`, `deploy/compose/`, `deploy/templates/`, or application vendor directory today.
 
@@ -86,23 +91,29 @@ Phase 4D implements offline declaration validation and desired-to-resolved plann
 
 Phase 4E observes bounded, sanitized capability data on only the executing host and compares it with resolved profile requirements. Its command allowlist is fixed and read-only. It neither persists inventory nor changes the host. CPU/RAM/storage minimums remain explicitly unspecified pending evidence and human decisions.
 
-### Phase 4F — host requirements and drift policy (current)
+### Phase 4F — host requirements and drift policy (complete)
 
 Phase 4F versions the evidence-backed profile requirement policy, establishes an initial Ubuntu-family/x86_64 support baseline, preserves unapproved numeric/model/runtime choices as human decisions, and reports deterministic drift with severity and descriptive remediation. It adds no probe and performs no action. Host compliance remains separate from external application/platform readiness.
 
+### Phase 4G — remediation planning and approval contract (current)
+
+Phase 4G classifies drift into minimized declarative mutation proposals, human policy decisions, or safe investigations. Plans bind resolved state, relevant sanitized drift, requirement policy, planning policy, and action definitions through deterministic fingerprints. Risk, scope, approval, preconditions, validation, rollback, and failure expectations are explicit. Approval records are synthetic/model-only and become stale when the exact plan or policy changes. Execution, rollback, approval persistence, and every host-mutation path remain absent.
+
 ### Later implementation gates
 
-1. human live review of the local inspector and Phase 4F requirement/decision policy;
-2. optional dedicated low-privilege inspector/persistence architecture;
-3. reviewed prerequisite/bootstrap implementation;
-4. service orchestration for one explicitly selected profile;
-5. external configuration and secret-provider adapters;
-6. application-consistent backup and restore transport;
-7. health, readiness, and boundary reporting beyond current host drift;
-8. compatibility and host-migration tooling;
-9. Core clean-install and reconstruction proof;
-10. Storage-role implementation, retention, and recovery proof;
-11. reviewed GoodWill superseded notice and eventual archival.
+1. human review of the Phase 4G plan/action/approval contracts and live read-only planning smoke test;
+2. resolution of Phase 4F sizing/runtime and Phase 4G approval/recovery governance decisions;
+3. optional dedicated low-privilege inspector/persistence architecture;
+4. separately designed execution engine, strict action allowlist, approval binding, privilege model, journal, stale-state rejection, rollback, emergency stop, and recovery proof;
+5. reviewed prerequisite/bootstrap implementation one action class at a time;
+6. service orchestration for one explicitly selected profile;
+7. external configuration and secret-provider adapters;
+8. application-consistent backup and restore transport;
+9. health, readiness, and boundary reporting beyond current host drift;
+10. compatibility and host-migration tooling;
+11. Core clean-install and reconstruction proof;
+12. Storage-role implementation, retention, and recovery proof;
+13. reviewed GoodWill superseded notice and eventual archival.
 
 Do not combine these into one privileged installer or treat successful service startup as proof of recovery or authorization.
 
@@ -120,3 +131,5 @@ Core production readiness depends on canonical Kal persisting RAG indexing statu
 - **Optional extensions:** RMM, network overlay, temporary public testing, desktop controls, and exporters require separate review and stay default off/outside core logic.
 
 The unresolved implementation decisions do not block read-only resolution review. They block claims that the platform is operational.
+
+Phase 4G additionally leaves approval-authority definitions, future automatic-action eligibility, high-risk approval expiry, external/multiple approval rules, rollback sufficiency, maintenance windows, backup verification authority, and network recovery proof for human decision. The conservative planning defaults grant no execution authority.

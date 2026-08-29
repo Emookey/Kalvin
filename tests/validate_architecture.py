@@ -144,7 +144,11 @@ for path in sorted([*(ROOT / "deploy").rglob("*.json"), *(ROOT / "manifests").rg
 check("declarations satisfy their local schemas", not schema_validation_errors, "; ".join(schema_validation_errors))
 check(
     "all architecture declarations are explicitly non-operational",
-    all(doc.get("contract_status") == "reference-architecture" and doc.get("operational") is False for doc in architecture_docs),
+    all(
+        doc.get("contract_status") in {"reference-architecture", "planning-only"}
+        and doc.get("operational") is False
+        for doc in architecture_docs
+    ),
 )
 
 vocab = documents[ROOT / "manifests/vocabularies.json"]

@@ -1,4 +1,4 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Kalvin's read-only declarative validation and resolution engine."""
+"""Kalvin's read-only declarative resolution and planning engine."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"

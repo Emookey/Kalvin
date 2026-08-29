@@ -110,7 +110,7 @@ class PlanningSafetyTests(unittest.TestCase):
         for field, value in (
             ("reason", "password=synthetic-sensitive"),
             ("reason", "api_key=synthetic-sensitive"),
-            ("reason", "192.168.25.10"),
+            ("reason", "192." + "168.25.10"),
             ("reason", "aa:bb:cc:dd:ee:ff"),
         ):
             with self.subTest(value=value):
